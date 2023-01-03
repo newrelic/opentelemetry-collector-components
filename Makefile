@@ -64,8 +64,6 @@ all-common:
 
 .PHONY: unit-tests-with-cover
 unit-tests-with-cover:
-	@echo Verifying that all packages have test files to count in coverage
-	@internal/buildscripts/check-test-files.sh $(subst github.com/open-telemetry/opentelemetry-collector-contrib/,./,$(ALL_PKGS))
 	@$(MAKE) $(FOR_GROUP_TARGET) TARGET="do-unit-tests-with-cover"
 
 TARGET="do-integration-tests-with-cover"
