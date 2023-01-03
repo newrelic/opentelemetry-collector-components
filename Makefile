@@ -62,10 +62,6 @@ all: install-tools all-common goporto multimod-verify gotest nrotelcomponents
 all-common:
 	@$(MAKE) $(FOR_GROUP_TARGET) TARGET="common"
 
-.PHONY: e2e-test
-e2e-test: nrotelcomponents oteltestbedcol
-	$(MAKE) -C testbed run-tests
-
 .PHONY: unit-tests-with-cover
 unit-tests-with-cover:
 	@echo Verifying that all packages have test files to count in coverage
@@ -75,12 +71,6 @@ unit-tests-with-cover:
 TARGET="do-integration-tests-with-cover"
 .PHONY: integration-tests-with-cover
 integration-tests-with-cover: $(INTEGRATION_MODS)
-
-# Long-running e2e tests
-.PHONY: stability-tests
-stability-tests: nrotelcomponents
-	@echo Stability tests are disabled until we have a stable performance environment.
-	@echo To enable the tests replace this echo by $(MAKE) -C testbed run-stability-tests
 
 .PHONY: gotidy
 gotidy:
@@ -252,12 +242,6 @@ mdatagen-test:
 .PHONY: nrotelcomponents
 nrotelcomponents:
 	cd ./cmd/nrotelcomponents && GO111MODULE=on CGO_ENABLED=0 $(GOCMD) build -trimpath -o ../../bin/nrotelcomponents_$(GOOS)_$(GOARCH)$(EXTENSION) \
-		$(BUILD_INFO) -tags $(GO_BUILD_TAGS) .
-
-# Build the Collector executable, with only components used in testbed.
-.PHONY: oteltestbedcol
-oteltestbedcol:
-	cd ./cmd/oteltestbedcol && GO111MODULE=on CGO_ENABLED=0 $(GOCMD) build -trimpath -o ../../bin/oteltestbedcol_$(GOOS)_$(GOARCH)$(EXTENSION) \
 		$(BUILD_INFO) -tags $(GO_BUILD_TAGS) .
 
 .PHONY: update-dep
