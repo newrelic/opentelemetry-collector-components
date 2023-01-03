@@ -190,7 +190,6 @@ install-tools:
 	cd $(TOOLS_MOD_DIR) && $(GOCMD) install github.com/pavius/impi/cmd/impi
 	cd $(TOOLS_MOD_DIR) && $(GOCMD) install github.com/tcnksm/ghr
 	cd $(TOOLS_MOD_DIR) && $(GOCMD) install go.opentelemetry.io/build-tools/checkdoc
-	cd $(TOOLS_MOD_DIR) && $(GOCMD) install go.opentelemetry.io/build-tools/issuegenerator
 	cd $(TOOLS_MOD_DIR) && $(GOCMD) install golang.org/x/tools/cmd/goimports
 	cd $(TOOLS_MOD_DIR) && $(GOCMD) install github.com/jcchavezs/porto/cmd/porto
 	cd $(TOOLS_MOD_DIR) && $(GOCMD) install go.opentelemetry.io/build-tools/crosslink
@@ -299,13 +298,3 @@ clean:
 .PHONY: genconfigdocs
 genconfigdocs:
 	cd cmd/configschema && $(GOCMD) run ./docsgen all
-
-.PHONY: generate-gh-issue-templates
-generate-gh-issue-templates:
-	for FILE in bug_report feature_request other; do \
-		YAML_FILE=".github/ISSUE_TEMPLATE/$${FILE}.yaml"; \
-		TMP_FILE=".github/ISSUE_TEMPLATE/$${FILE}.yaml.tmp"; \
-		cat "$${YAML_FILE}" > "$${TMP_FILE}"; \
-	 	FILE="$${TMP_FILE}" ./.github/workflows/scripts/add-component-options.sh > "$${YAML_FILE}"; \
-		rm "$${TMP_FILE}"; \
-	done
