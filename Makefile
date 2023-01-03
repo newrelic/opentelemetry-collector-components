@@ -248,27 +248,6 @@ mdatagen-test:
 	cd cmd/mdatagen && $(GOCMD) install .
 	cd cmd/mdatagen && $(GOCMD) generate ./...
 
-.PHONY: chlog-install
-chlog-install:
-	cd $(TOOLS_MOD_DIR) && $(GOCMD) install go.opentelemetry.io/build-tools/chloggen
-
-FILENAME?=$(shell git branch --show-current)
-.PHONY: chlog-new
-chlog-new: chlog-install
-	chloggen new --filename $(FILENAME)
-
-.PHONY: chlog-validate
-chlog-validate: chlog-install
-	chloggen validate
-
-.PHONY: chlog-preview
-chlog-preview: chlog-install
-	chloggen update --dry
-
-.PHONY: chlog-update
-chlog-update: chlog-install
-	chloggen update --version $(VERSION)
-
 # Build the Collector executable.
 .PHONY: nrotelcomponents
 nrotelcomponents:
