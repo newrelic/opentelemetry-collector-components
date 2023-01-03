@@ -257,13 +257,6 @@ otel-from-lib:
 	# Sets opentelemetry core to be not be pulled from local source tree. (Undoes otel-from-tree.)
 	$(MAKE) for-all CMD="$(GOCMD) mod edit -dropreplace go.opentelemetry.io/collector"
 
-.PHONY: deb-rpm-package
-%-package: ARCH ?= amd64
-%-package:
-	GOOS=linux GOARCH=$(ARCH) $(MAKE) nrotelcomponents
-	docker build -t nrotelcomponents-fpm internal/buildscripts/packaging/fpm
-	docker run --rm -v $(CURDIR):/repo -e PACKAGE=$* -e VERSION=$(VERSION) -e ARCH=$(ARCH) nrotelcomponents-fpm
-
 # Verify existence of READMEs for components specified as default components in the collector.
 .PHONY: checkdoc
 checkdoc:
