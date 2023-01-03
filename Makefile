@@ -270,11 +270,6 @@ otel-from-lib:
 	# Sets opentelemetry core to be not be pulled from local source tree. (Undoes otel-from-tree.)
 	$(MAKE) for-all CMD="$(GOCMD) mod edit -dropreplace go.opentelemetry.io/collector"
 
-.PHONY: build-examples
-build-examples:
-	docker-compose -f examples/tracing/docker-compose.yml build
-	docker-compose -f exporter/splunkhecexporter/example/docker-compose.yml build
-
 .PHONY: deb-rpm-package
 %-package: ARCH ?= amd64
 %-package:
