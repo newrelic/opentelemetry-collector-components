@@ -315,18 +315,6 @@ $(1)
 
 endef
 
-# List of directories where certificates are stored for unit tests.
-CERT_DIRS := receiver/sapmreceiver/testdata \
-             receiver/signalfxreceiver/testdata \
-             receiver/splunkhecreceiver/testdata \
-             receiver/mongodbatlasreceiver/testdata/alerts/cert \
-             receiver/mongodbreceiver/testdata/certs
-
-# Generate certificates for unit tests relying on certificates.
-.PHONY: certs
-certs:
-	$(foreach dir, $(CERT_DIRS), $(call exec-command, @internal/buildscripts/gen-certs.sh -o $(dir)))
-
 .PHONY: multimod-verify
 multimod-verify: install-tools
 	@echo "Validating versions.yaml"
