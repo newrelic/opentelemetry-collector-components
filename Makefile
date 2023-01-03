@@ -56,7 +56,7 @@ all-groups:
 	@echo "\nother: $(OTHER_MODS)"
 
 .PHONY: all
-all: install-tools all-common goporto multimod-verify gotest nrotelcomponents
+all: install-tools all-common goporto gotest nrotelcomponents
 
 .PHONY: all-common
 all-common:
@@ -109,17 +109,6 @@ for-all:
 	  	echo "running $${CMD} in $${dir}" && \
 	 	$${CMD} ); \
 	done
-
-COMMIT?=HEAD
-MODSET?=contrib-core
-REMOTE?=git@github.com:open-telemetry/opentelemetry-collector-contrib.git
-.PHONY: push-tags
-push-tags:
-	multimod verify
-	set -e; for tag in `multimod tag -m ${MODSET} -c ${COMMIT} --print-tags | grep -v "Using" `; do \
-		echo "pushing tag $${tag}"; \
-		git push ${REMOTE} $${tag}; \
-	done;
 
 DEPENDABOT_PATH=".github/dependabot.yml"
 .PHONY: gendependabot
@@ -203,7 +192,6 @@ install-tools:
 	cd $(TOOLS_MOD_DIR) && $(GOCMD) install go.opentelemetry.io/build-tools/checkdoc
 	cd $(TOOLS_MOD_DIR) && $(GOCMD) install go.opentelemetry.io/build-tools/issuegenerator
 	cd $(TOOLS_MOD_DIR) && $(GOCMD) install golang.org/x/tools/cmd/goimports
-	cd $(TOOLS_MOD_DIR) && $(GOCMD) install go.opentelemetry.io/build-tools/multimod
 	cd $(TOOLS_MOD_DIR) && $(GOCMD) install github.com/jcchavezs/porto/cmd/porto
 	cd $(TOOLS_MOD_DIR) && $(GOCMD) install go.opentelemetry.io/build-tools/crosslink
 
@@ -293,21 +281,6 @@ define exec-command
 $(1)
 
 endef
-
-.PHONY: multimod-verify
-multimod-verify: install-tools
-	@echo "Validating versions.yaml"
-	multimod verify
-
-.PHONY: multimod-prerelease
-multimod-prerelease: install-tools
-	multimod prerelease -s=true -b=false -v ./versions.yaml -m contrib-base
-	$(MAKE) gotidy
-
-.PHONY: multimod-sync
-multimod-sync: install-tools
-	multimod sync -a=true -s=true -o ../opentelemetry-collector
-	$(MAKE) gotidy
 
 .PHONY: crosslink
 crosslink: install-tools
