@@ -185,6 +185,7 @@ install-tools:
 	cd $(TOOLS_MOD_DIR) && $(GOCMD) install github.com/golangci/golangci-lint/cmd/golangci-lint
 	cd $(TOOLS_MOD_DIR) && $(GOCMD) install github.com/google/addlicense
 	cd $(TOOLS_MOD_DIR) && $(GOCMD) install github.com/pavius/impi/cmd/impi
+	cd $(TOOLS_MOD_DIR) && $(GOCMD) install github.com/open-telemetry/opentelemetry-collector-contrib/cmd/mdatagen
 	cd $(TOOLS_MOD_DIR) && $(GOCMD) install go.opentelemetry.io/build-tools/checkdoc
 	cd $(TOOLS_MOD_DIR) && $(GOCMD) install golang.org/x/tools/cmd/goimports
 	cd $(TOOLS_MOD_DIR) && $(GOCMD) install github.com/jcchavezs/porto/cmd/porto
@@ -212,14 +213,8 @@ docker-nrotelcomponents:
 	COMPONENT=nrotelcomponents $(MAKE) docker-component
 
 .PHONY: generate
-generate:
-	cd cmd/mdatagen && $(GOCMD) install .
+generate: install-tools
 	$(MAKE) for-all CMD="$(GOCMD) generate ./..."
-
-.PHONY: mdatagen-test
-mdatagen-test:
-	cd cmd/mdatagen && $(GOCMD) install .
-	cd cmd/mdatagen && $(GOCMD) generate ./...
 
 # Build the Collector executable.
 .PHONY: nrotelcomponents
