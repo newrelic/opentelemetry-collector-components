@@ -15,6 +15,7 @@
 package components // import "github.com/cristianciutea/opentelemetry-components/internal/components"
 
 import (
+	"github.com/cristianciutea/opentelemetry-components/receiver/nopreceiver"
 	"go.opentelemetry.io/collector/exporter"
 	"go.opentelemetry.io/collector/exporter/loggingexporter"
 	"go.opentelemetry.io/collector/exporter/otlpexporter"
@@ -262,6 +263,7 @@ func Components() (otelcol.Factories, error) {
 		udplogreceiver.NewFactory(),
 		vcenterreceiver.NewFactory(),
 		zipkinreceiver.NewFactory(),
+		nopreceiver.NewFactory(),
 	}
 	factories.Receivers, err = receiver.MakeFactoryMap(receivers...)
 	if err != nil {

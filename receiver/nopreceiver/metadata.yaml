@@ -1,0 +1,17 @@
+name: nop
+
+attributes:
+  greeter:
+    description: Cool greeter
+    type: string
+
+metrics:
+  hello.requests:
+    enabled: true
+    description: Total number of hello requests since it started
+    unit: requests
+    sum:
+      value_type: int
+      aggregation: cumulative
+      monotonic: true
+    attributes: [greeter]
