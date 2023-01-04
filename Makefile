@@ -231,23 +231,6 @@ update-dep:
 update-otel:
 	$(MAKE) update-dep MODULE=go.opentelemetry.io/collector VERSION=$(OTEL_VERSION) RC_VERSION=$(OTEL_RC_VERSION) STABLE_VERSION=$(OTEL_STABLE_VERSION)
 
-.PHONY: otel-from-tree
-otel-from-tree:
-	# This command allows you to make changes to your local checkout of otel core and build
-	# contrib against those changes without having to push to github and update a bunch of
-	# references. The workflow is:
-	#
-	# 1. Hack on changes in core (assumed to be checked out in ../opentelemetry-collector from this directory)
-	# 2. Run `make otel-from-tree` (only need to run it once to remap go modules)
-	# 3. You can now build contrib and it will use your local otel core changes.
-	# 4. Before committing/pushing your contrib changes, undo by running `make otel-from-lib`.
-	$(MAKE) for-all CMD="$(GOCMD) mod edit -replace go.opentelemetry.io/collector=$(SRC_ROOT)/../opentelemetry-collector"
-
-.PHONY: otel-from-lib
-otel-from-lib:
-	# Sets opentelemetry core to be not be pulled from local source tree. (Undoes otel-from-tree.)
-	$(MAKE) for-all CMD="$(GOCMD) mod edit -dropreplace go.opentelemetry.io/collector"
-
 # Verify existence of READMEs for components specified as default components in the collector.
 .PHONY: checkdoc
 checkdoc:
