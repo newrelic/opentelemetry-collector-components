@@ -4,12 +4,12 @@ RUN_CONFIG?=local/config.yaml
 CMD?=
 OTEL_VERSION=main
 
-BUILD_INFO_IMPORT_PATH=github.com/open-telemetry/opentelemetry-collector-contrib/internal/otelcontribcore/internal/version
+BUILD_INFO_IMPORT_PATH=github.com/cristianciutea/opentelemetry-components/internal/otelcontribcore/internal/version
 VERSION=$(shell git describe --always --match "v[0-9]*" HEAD)
 BUILD_INFO=-ldflags "-X $(BUILD_INFO_IMPORT_PATH).Version=$(VERSION)"
 
 COMP_REL_PATH=internal/components/components.go
-MOD_NAME=github.com/open-telemetry/opentelemetry-collector-contrib
+MOD_NAME=github.com/cristianciutea/opentelemetry-components
 
 GROUP ?= all
 FOR_GROUP_TARGET=for-$(GROUP)-target
