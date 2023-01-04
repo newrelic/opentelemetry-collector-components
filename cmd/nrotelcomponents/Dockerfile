@@ -11,5 +11,5 @@ USER ${USER_UID}
 COPY --from=prep /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
 COPY otelcontribcol /
 EXPOSE 4317 55680 55679
-ENTRYPOINT ["/otelcontribcol"]
+ENTRYPOINT ["/nrotelcomponents"]
 CMD ["--config", "/etc/otel/config.yaml"]
