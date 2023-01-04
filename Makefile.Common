@@ -130,7 +130,7 @@ checklinks:
 .PHONY: fmt
 fmt:
 	gofmt  -w -s ./
-	goimports -w  -local github.com/open-telemetry/opentelemetry-collector-contrib ./
+	goimports -w  -local github.com/cristianciutea/opentelemetry-components ./
 
 .PHONY: lint
 lint: checklicense misspell
@@ -161,3 +161,7 @@ moddownload:
 .PHONY: updatedep
 updatedep:
 	@$(MAKE) tidy
+
+.PHONY: generate
+generate:
+	$(GOCMD) generate

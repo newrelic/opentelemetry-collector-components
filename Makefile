@@ -98,6 +98,10 @@ goimpi: install-tools
 goporto: install-tools
 	porto -w --include-internal --skip-dirs "^cmd$$" ./
 
+.PHONY: gogenerate
+gogenerate: install-tools
+	@$(MAKE) $(FOR_GROUP_TARGET) TARGET="generate"
+
 .PHONY: for-all
 for-all:
 	@echo "running $${CMD} in root"
@@ -212,9 +216,6 @@ endif
 docker-nrotelcomponents:
 	COMPONENT=nrotelcomponents $(MAKE) docker-component
 
-.PHONY: generate
-generate: install-tools
-	$(MAKE) for-all CMD="$(GOCMD) generate ./..."
 
 # Build the Collector executable.
 .PHONY: nrotelcomponents
