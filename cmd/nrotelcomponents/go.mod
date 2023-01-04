@@ -107,6 +107,7 @@ require (
 	github.com/containerd/ttrpc v1.1.0 // indirect
 	github.com/coreos/go-oidc v2.2.1+incompatible // indirect
 	github.com/coreos/go-systemd/v22 v22.4.0 // indirect
+	github.com/cristianciutea/opentelemetry-components/receiver/nopreceiver v0.0.0-00010101000000-000000000000 // indirect
 	github.com/cyphar/filepath-securejoin v0.2.3 // indirect
 	github.com/danieljoos/wincred v1.1.2 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
@@ -567,3 +568,5 @@ replace github.com/go-kit/log => github.com/dannykopping/go-kit-log v0.2.2-0.202
 replace github.com/mattn/go-ieproxy => github.com/mattn/go-ieproxy v0.0.1
 
 replace github.com/cristianciutea/opentelemetry-components/internal/otelcontribcore => ../../internal/otelcontribcore
+
+replace github.com/cristianciutea/opentelemetry-components/receiver/nopreceiver => ../../receiver/nopreceiver

@@ -57,7 +57,7 @@ check_code_owner_existence() {
     exit 1
   else
     echo "---"
-    echo "SUCCED: all components has a codeowner"
+    echo "SUCCEED: all components have a codeowner"
     exit 0
   fi
 }
