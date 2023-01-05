@@ -1,0 +1,70 @@
+# options for analysis running
+run:
+  # timeout for analysis, e.g. 30s, 5m, default is 1m
+  deadline: 5m
+
+  # exit code when at least one issue was found, default is 1
+  issues-exit-code: 1
+
+  # include test files or not, default is true
+  tests: true
+
+  build-tags:
+    - integration
+    - unit
+
+  modules-download-mode: readonly
+
+# all available settings of specific linters
+linters-settings:
+  govet:
+    # report about shadowed variables
+    check-shadowing: true
+  gocyclo:
+    # minimal code complexity to report, 30 by default (but we recommend 10-20)
+    min-complexity: 26
+  importas:
+    alias:
+      - pkg: github.com/sirupsen/logrus
+        alias: log
+  nolintlint:
+    # Enable to ensure that nolint directives are all used. Default is true.
+    allow-unused: false
+    # Enable to require nolint directives to mention the specific linter being suppressed. Default is false.
+    require-specific: true
+  depguard:
+    list-type: blacklist
+    include-go-root: false
+    packages-with-error-message:
+      - log: 'for logging, use: log "github.com/sirupsen/logrus"'
+
+linters:
+  disable-all: true
+  enable:
+    - depguard
+    - deadcode
+    - errcheck
+    - goimports
+    - gocyclo
+    - gofmt
+    - gosimple
+    - govet
+    - importas
+    - ineffassign
+    - misspell
+    - nolintlint
+    - revive
+    - staticcheck
+    - thelper
+    - unconvert
+    #- unparam
+    - unused
+    - varcheck
+    - vet
+    - whitespace
+
+issues:
+  # disable limits on issue reporting
+  max-per-linter: 0
+  max-same-issues: 0
+
