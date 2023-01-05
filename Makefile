@@ -32,10 +32,6 @@ INTERNAL_MODS := $(shell find ./internal/* $(FIND_MOD_ARGS) -exec $(TO_MOD_DIR) 
 OTHER_MODS := $(shell find . $(EX_COMPONENTS) $(EX_INTERNAL) $(FIND_MOD_ARGS) -exec $(TO_MOD_DIR) ) $(PWD)
 ALL_MODS := $(RECEIVER_MODS) $(PROCESSOR_MODS) $(EXPORTER_MODS) $(EXTENSION_MODS) $(INTERNAL_MODS) $(OTHER_MODS)
 
-# find -exec dirname cannot be used to process multiple matching patterns
-FIND_INTEGRATION_TEST_MODS={ find . -type f -name "*integration_test.go" & find . -type f -name "*e2e_test.go" -not -path "./testbed/*"; }
-INTEGRATION_MODS := $(shell $(FIND_INTEGRATION_TEST_MODS) | uniq | xargs $(TO_MOD_DIR) )
-
 ifeq ($(GOOS),windows)
 	EXTENSION := .exe
 endif
@@ -65,10 +61,6 @@ all-common:
 .PHONY: unit-tests-with-cover
 unit-tests-with-cover:
 	@$(MAKE) $(FOR_GROUP_TARGET) TARGET="do-unit-tests-with-cover"
-
-TARGET="do-integration-tests-with-cover"
-.PHONY: integration-tests-with-cover
-integration-tests-with-cover: $(INTEGRATION_MODS)
 
 .PHONY: gotidy
 gotidy:
