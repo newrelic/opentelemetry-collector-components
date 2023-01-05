@@ -21,10 +21,9 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/cristianciutea/opentelemetry-components/internal/otelcontribcore/internal/version"
 	"go.opentelemetry.io/collector/component"
 	"go.opentelemetry.io/collector/otelcol"
-
-	"github.com/cristianciutea/opentelemetry-components/internal/otelcontribcore/internal/version"
 )
 
 type ComponentsFunc func() (otelcol.Factories, error)

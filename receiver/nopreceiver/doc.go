@@ -3,4 +3,4 @@
 
 //go:generate mdatagen metadata.yaml
 
-package nopreceiver
+package nopreceiver // import "github.com/cristianciutea/opentelemetry-components/receiver/nopreceiver"
