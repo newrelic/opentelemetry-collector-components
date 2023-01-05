@@ -138,3 +138,63 @@ jobs:
           git diff --exit-code ':!*go.sum' || (echo 'Generated code is out of date, please run "make generate" and commit the changes in this PR.' && exit 1)
       - name: Impi
         run: make -j2 goimpi
+  unittest-matrix:
+      strategy:
+        matrix:
+          go-version: [1.19, 1.18]
+          group:
+            - receiver
+            - processor
+            - exporter
+            - extension
+            - internal
+            - other
+      runs-on: ubuntu-latest
+      needs: [setup-environment]
+      steps:
+        - name: Checkout Repo
+          uses: actions/checkout@v3
+        - name: Setup Go
+          uses: actions/setup-go@v3
+          with:
+            go-version: ${{ matrix.go-version }}
+        - name: Cache Go
+          id: go-cache
+          uses: actions/cache@v3
+          with:
+            path: |
+              ~/go/bin
+              ~/go/pkg/mod
+            key: go-cache-${{ runner.os }}-${{ hashFiles('**/go.sum') }}
+        - name: Install dependencies
+          if: steps.go-cache.outputs.cache-hit != 'true'
+          run: make -j2 gomoddownload
+        - name: Install Tools
+          if: steps.go-cache.outputs.cache-hit != 'true'
+          run: make install-tools
+        - name: Cache Test Build
+          uses: actions/cache@v3
+          with:
+            path: ~/.cache/go-build
+            key: go-test-build-${{ runner.os }}-${{ matrix.go-version }}-${{ hashFiles('**/go.sum') }}
+        - name: Run Unit Tests
+          run: make gotest GROUP=${{ matrix.group }}
+  unittest:
+    if: ${{ always() }}
+    strategy:
+      matrix:
+        go-version: [1.19, 1.18]
+    runs-on: ubuntu-latest
+    needs: [setup-environment, unittest-matrix]
+    steps:
+      - name: Print result
+        run: echo ${{ needs.unittest-matrix.result }}
+      - name: Interpret result
+        run: |
+          if [[ success == ${{ needs.unittest-matrix.result }} ]]
+          then
+            echo "All matrix unit test jobs passed!"
+          else
+            echo "One or more matrix unit test jobs failed."
+            false
+          fi
