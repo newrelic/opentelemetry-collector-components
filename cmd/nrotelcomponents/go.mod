@@ -567,6 +567,6 @@ replace github.com/go-kit/log => github.com/dannykopping/go-kit-log v0.2.2-0.202
 // see https://github.com/mattn/go-ieproxy/issues/45
 replace github.com/mattn/go-ieproxy => github.com/mattn/go-ieproxy v0.0.1
 
-replace github.com/cristianciutea/opentelemetry-components/internal/otelcontribcore => ../../internal/otelcontribcore
+replace github.com/cristianciutea/opentelemetry-components/internal/otelcomponents => ../../internal/otelcomponents
 
 replace github.com/cristianciutea/opentelemetry-components/receiver/nopreceiver => ../../receiver/nopreceiver

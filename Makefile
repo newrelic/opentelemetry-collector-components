@@ -4,7 +4,7 @@ RUN_CONFIG?=local/config.yaml
 CMD?=
 OTEL_VERSION=main
 
-BUILD_INFO_IMPORT_PATH=github.com/cristianciutea/opentelemetry-components/internal/otelcontribcore/internal/version
+BUILD_INFO_IMPORT_PATH=github.com/cristianciutea/opentelemetry-components/internal/otelcomponents/internal/version
 VERSION=$(shell git describe --always --match "v[0-9]*" HEAD)
 BUILD_INFO=-ldflags "-X $(BUILD_INFO_IMPORT_PATH).Version=$(VERSION)"
 

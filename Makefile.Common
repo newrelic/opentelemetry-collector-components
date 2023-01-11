@@ -1,11 +1,11 @@
 # In order to ensure make instructions fail if there is command that fails a pipe (ie: `go test ... | tee -a ./test_results.txt`)
 # the value `-o pipefail` (or `set -o pipefail`) is added to each shell command that make runs
-# otherwise in the example command pipe, only the exit code of `tee` is recorded instead of `go test` which can cause 
+# otherwise in the example command pipe, only the exit code of `tee` is recorded instead of `go test` which can cause
 # test to pass in CI when they should not.
 SHELL = /bin/bash
 ifeq ($(shell uname -s),Windows)
 	.SHELLFLAGS = /o pipefile /c
-else 
+else
 	.SHELLFLAGS = -o pipefail -c
 endif
 
@@ -70,7 +70,7 @@ test: ## Runs go tests for the current module.
 	else \
 		$(GOTEST) $(GOTEST_OPT) ./...; \
 	fi
-	
+
 .PHONY: do-unit-tests-with-cover
 do-unit-tests-with-cover: ## Runs go unit tests with coverage for the current module.
 	@echo "running $(GOCMD) unit test ./... + coverage in `pwd`"
@@ -87,6 +87,7 @@ benchmark: ## Runs go benchmark tests for the current module.
 
 .PHONY: addlicense
 addlicense: ## Runs addlicense tool.
+	echo $(ALL_SRC)
 	@ADDLICENCESEOUT=`$(ADDLICENCESE) -y "" -ignore "vendor/**" -s=only -c 'New Relic Corporation. All rights reserved.' $(ALL_SRC) 2>&1`; \
 		if [ "$$ADDLICENCESEOUT" ]; then \
 			echo "$(ADDLICENCESE) FAILED => add License errors:\n"; \
@@ -155,7 +156,6 @@ generate: ## Runs go generate for the current module.
 
 .PHONY: help
 help: ## Shows all targets and help from the Makefiles.
-	@echo $(MAKEFILE_LIST)
 	@grep --no-filename -E '^([a-z.A-Z_%-]+:.*?)##' $(MAKEFILE_LIST) | \
 		awk 'BEGIN {FS = "(:.*?)## ?"}; { \
 			if (length($$1) > 0) { \
