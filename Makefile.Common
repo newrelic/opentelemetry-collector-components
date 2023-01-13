@@ -1,11 +1,11 @@
 # In order to ensure make instructions fail if there is command that fails a pipe (ie: `go test ... | tee -a ./test_results.txt`)
 # the value `-o pipefail` (or `set -o pipefail`) is added to each shell command that make runs
-# otherwise in the example command pipe, only the exit code of `tee` is recorded instead of `go test` which can cause 
+# otherwise in the example command pipe, only the exit code of `tee` is recorded instead of `go test` which can cause
 # test to pass in CI when they should not.
 SHELL = /bin/bash
 ifeq ($(shell uname -s),Windows)
 	.SHELLFLAGS = /o pipefile /c
-else 
+else
 	.SHELLFLAGS = -o pipefail -c
 endif
 
@@ -17,7 +17,6 @@ GO_BUILD_TAGS=""
 GOTEST_OPT?= -race -timeout 300s --tags=$(GO_BUILD_TAGS)
 GOTEST_INTEGRATION_OPT?= -race -timeout 360s
 GOTEST_OPT_WITH_COVERAGE = $(GOTEST_OPT) -coverprofile=coverage.txt -covermode=atomic
-GOTEST_OPT_WITH_INTEGRATION=$(GOTEST_INTEGRATION_OPT) -tags=integration,$(GO_BUILD_TAGS) -run=Integration -coverprofile=integration-coverage.txt -covermode=atomic
 GOCMD?= go
 GOTEST=$(GOCMD) test
 GOOS=$(shell $(GOCMD) env GOOS)
@@ -65,15 +64,15 @@ all-pkg-dirs:
 common: checklicense impi lint misspell
 
 .PHONY: test
-test:
+test: ## Runs go tests for the current module.
 	if [ "$(RUNNING_ON_GITHUB_ACTION)" = "true" ]; then \
 		$(GOTEST) $(GOTEST_OPT) -v ./... 2>&1 | tee -a ./foresight-test-report.txt; \
 	else \
 		$(GOTEST) $(GOTEST_OPT) ./...; \
 	fi
-	
+
 .PHONY: do-unit-tests-with-cover
-do-unit-tests-with-cover:
+do-unit-tests-with-cover: ## Runs go unit tests with coverage for the current module.
 	@echo "running $(GOCMD) unit test ./... + coverage in `pwd`"
 	@if [ "$(RUNNING_ON_GITHUB_ACTION)" = "true" ]; then \
 		$(GOTEST) $(GOTEST_OPT_WITH_COVERAGE) -v ./... 2>&1 | tee -a ./foresight-test-report-unit-tests-with-cover.txt; \
@@ -82,25 +81,14 @@ do-unit-tests-with-cover:
 	fi
 	$(GOCMD) tool cover -html=coverage.txt -o coverage.html
 
-.PHONY: do-integration-tests-with-cover
-do-integration-tests-with-cover:
-	@echo "running $(GOCMD) integration test ./... + coverage in `pwd`"
-	@if [ "$(RUNNING_ON_GITHUB_ACTION)" = "true" ]; then \
-		$(GOTEST) $(GOTEST_OPT_WITH_INTEGRATION) -v ./... 2>&1 | tee -a ./foresight-test-report-integration-tests-with-cover.txt; \
-	else \
-		$(GOTEST) $(GOTEST_OPT_WITH_INTEGRATION) ./...; \
-	fi
-	@if [ -e integration-coverage.txt ]; then \
-  		$(GOCMD) tool cover -html=integration-coverage.txt -o integration-coverage.html; \
-  	fi
-
 .PHONY: benchmark
-benchmark:
+benchmark: ## Runs go benchmark tests for the current module.
 	$(GOTEST) -bench=. -run=notests --tags=$(GO_BUILD_TAGS) $(ALL_PKGS)
 
 .PHONY: addlicense
-addlicense:
-	@ADDLICENCESEOUT=`$(ADDLICENCESE) -y "" -c 'The OpenTelemetry Authors' $(ALL_SRC) 2>&1`; \
+addlicense: ## Runs addlicense tool.
+	echo $(ALL_SRC)
+	@ADDLICENCESEOUT=`$(ADDLICENCESE) -y "" -ignore "vendor/**" -s=only -c 'New Relic Corporation. All rights reserved.' $(ALL_SRC) 2>&1`; \
 		if [ "$$ADDLICENCESEOUT" ]; then \
 			echo "$(ADDLICENCESE) FAILED => add License errors:\n"; \
 			echo "$$ADDLICENCESEOUT\n"; \
@@ -110,7 +98,7 @@ addlicense:
 		fi
 
 .PHONY: checklicense
-checklicense:
+checklicense: ## Runs checklicense tool.
 	@ADDLICENCESEOUT=`$(ADDLICENCESE) -check $(ALL_SRC) 2>&1`; \
 		if [ "$$ADDLICENCESEOUT" ]; then \
 			echo "$(ADDLICENCESE) FAILED => add License errors:\n"; \
@@ -122,43 +110,57 @@ checklicense:
 		fi
 
 .PHONY: checklinks
-checklinks:
+checklinks: ## Runs checklinks tool.
 	command -v $(MDLINKCHECK) >/dev/null 2>&1 || { echo >&2 "$(MDLINKCHECK) not installed. Run 'npm install -g markdown-link-check'"; exit 1; }
 	find . -name \*.md -print0 | xargs -0 -n1 \
 		$(MDLINKCHECK) -q -c $(SRC_ROOT)/.github/workflows/check_links_config.json || true
 
 .PHONY: fmt
-fmt:
+fmt: ## Formats Go files with gofmt and goimports.
 	gofmt  -w -s ./
-	goimports -w  -local github.com/open-telemetry/opentelemetry-collector-contrib ./
+	goimports -w  -local github.com/cristianciutea/opentelemetry-components ./
 
 .PHONY: lint
-lint: checklicense misspell
+lint: checklicense misspell ## Performs checklicense, misspell and golangci-lint checks.
 	$(LINT) run --allow-parallel-runners
 
 .PHONY: tidy
-tidy:
+tidy: ## Updates Go dependencies for the current module.
 	rm -fr go.sum
 	$(GOCMD) mod tidy -compat=1.18
 
 .PHONY: misspell
-misspell:
+misspell: ## Checks spelling mistakes with misspell.
 	@echo "running $(MISSPELL)"
 	@$(MISSPELL) $(ALL_SRC_AND_DOC)
 
 .PHONY: misspell-correction
-misspell-correction:
+misspell-correction: ## Runs misspell correction tool with autosave.
 	$(MISSPELL_CORRECTION) $(ALL_SRC_AND_DOC)
 
 .PHONY: impi
-impi:
+impi: ## Runs impi tool to verify dependencies order.
 	@$(IMPI) --local github.com/open-telemetry/opentelemetry-collector-contrib --scheme stdThirdPartyLocal ./...
 
 .PHONY: moddownload
-moddownload:
+moddownload: ## Runs go mod download for the current module.
 	$(GOCMD) mod download
 
 .PHONY: updatedep
-updatedep:
-	$(PWD)/internal/buildscripts/update-dep
+updatedep: ## Updates Go dependencies for the current module.
 	@$(MAKE) tidy
+
+.PHONY: generate
+generate: ## Runs go generate for the current module.
+	$(GOCMD) generate
+
+.PHONY: help
+help: ## Shows all targets and help from the Makefiles.
+	@grep --no-filename -E '^([a-z.A-Z_%-]+:.*?)##' $(MAKEFILE_LIST) | \
+		awk 'BEGIN {FS = "(:.*?)## ?"}; { \
+			if (length($$1) > 0) { \
+				printf "  \033[36m%-20s\033[0m %s\n", $$1, $$2; \
+			} else { \
+				printf "%s\n", $$2; \
+			} \
+		}'
