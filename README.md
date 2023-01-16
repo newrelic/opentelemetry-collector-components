@@ -1,25 +1,11 @@
-# developer-toolkit-template-go
+# OpenTelemetry Collector Components
 
-[![Testing](https://github.com/newrelic/developer-toolkit-template-go/workflows/Testing/badge.svg)](https://github.com/newrelic/developer-toolkit-template-go/actions)
-[![Security Scan](https://github.com/newrelic/developer-toolkit-template-go/workflows/Security%20Scan/badge.svg)](https://github.com/newrelic/developer-toolkit-template-go/actions)
-[![Go Report Card](https://goreportcard.com/badge/github.com/newrelic/developer-toolkit-template-go?style=flat-square)](https://goreportcard.com/report/github.com/newrelic/developer-toolkit-template-go)
-[![GoDoc](https://godoc.org/github.com/newrelic/developer-toolkit-template-go?status.svg)](https://godoc.org/github.com/newrelic/developer-toolkit-template-go)
-[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://github.com/newrelic/developer-toolkit-template-go/blob/master/LICENSE)
-[![CLA assistant](https://cla-assistant.io/readme/badge/newrelic/developer-toolkit-template-go)](https://cla-assistant.io/newrelic/developer-toolkit-template-go)
-[![Release](https://img.shields.io/github/release/newrelic/developer-toolkit-template-go/all.svg)](https://github.com/newrelic/developer-toolkit-template-go/releases/latest)
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://github.com/newrelic/opentelemetry-collector-components/blob/master/LICENSE)
+[![CLA assistant](https://cla-assistant.io/readme/badge/newrelic/developer-toolkit-template-go)](https://cla-assistant.io/newrelic/opentelemetry-collector-components)
 
-# TODO
+OpenTelemetry Collector components is a New Relic's repository that contains custom [Collector's components](https://opentelemetry.io/docs/collector/). Those components are either in process of being accepted by the community or removed (e.g deprecated) from upstream.
 
-Find and replace all instances of `developer-toolkit-template-go` in ALL files
-with the name of your repo.
-
-
-## Example
-
-```go
-// TODO
-```
-
+Components owners are specified in [CODEOWNERS](./github/CODEOWNERS) file.
 
 ## Community
 
@@ -35,40 +21,28 @@ Keep in mind that when you submit your pull request, you'll need to sign the CLA
 
 ## Development
 
+[Nopreceiver](./receiver/nopreceiver/) is a "no operation" component of type receiver that can be used as helper package when starting a new component.
+
 ### Requirements
 
-* Go 1.13.0+
+* Go 1.18.0+
 * GNU Make
 * git
 
 
-### Building
-
-```
-# Default target is 'build'
-$ make
-
-# Explicitly run build
-$ make build
-
-# Locally test the CI build scripts
-# make build-ci
-```
-
-
 ### Testing
 
-Before contributing, all linting and tests must pass.  Tests can be run directly via:
+Before contributing, all linting and tests must pass. Each component must be a Go module and include the [Makefile.Common](./Makefile.Common), in its Makefile:
+
+```make
+include ../../Makefile.Common
+```
+
+All available targets can be checked with:
 
 ```
-# Tests and Linting
-$ make test
-
-# Only unit tests
-$ make test-unit
-
-# Only integration tests
-$ make test-integration
+# See make helpers
+$ make help
 ```
 
 ### Commit Messages
@@ -94,24 +68,10 @@ This refers to what part of the code is the focus of the work.  For example:
 
 **General:**
 
-* `build` - Work related to the build system (linting, makefiles, CI/CD, etc)
-* `release` - Work related to cutting a new release
-
-**Package Specific:**
-
-* `newrelic` - Work related to the New Relic package
-* `http` - Work related to the `internal/http` package
-* `alerts` - Work related to the `pkg/alerts` package
-
-
-
-### Documentation
-
-**Note:** This requires the repo to be in your GOPATH [(godoc issue)](https://github.com/golang/go/issues/26827)
-
-```
-$ make docs
-```
+* `./.github` - Work related to test and build the system (linting, owners, CI/CD, etc).
+* `./receiver/` - OpenTelemetry collector receivers.
+* `./internal/` - Common testing packages and components import.
+* `./cmd/nrotelcomponents/` - Testing collector that includes all custom components.
 
 
 ## Support
