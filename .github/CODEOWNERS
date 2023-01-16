@@ -1,0 +1,4 @@
+receiver/nopreceiver/           @newrelic/caos
+internal/common/                @newrelic/caos
+internal/tools/                 @newrelic/caos
+cmd/nrotelcomponents/           @newrelic/caos

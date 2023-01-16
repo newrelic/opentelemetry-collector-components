@@ -1,0 +1,166 @@
+# In order to ensure make instructions fail if there is command that fails a pipe (ie: `go test ... | tee -a ./test_results.txt`)
+# the value `-o pipefail` (or `set -o pipefail`) is added to each shell command that make runs
+# otherwise in the example command pipe, only the exit code of `tee` is recorded instead of `go test` which can cause
+# test to pass in CI when they should not.
+SHELL = /bin/bash
+ifeq ($(shell uname -s),Windows)
+	.SHELLFLAGS = /o pipefile /c
+else
+	.SHELLFLAGS = -o pipefail -c
+endif
+
+# SRC_ROOT is the top of the source tree.
+SRC_ROOT := $(realpath $(dir $(lastword $(MAKEFILE_LIST))))
+
+# build tags required by any component should be defined as an independent variables and later added to GO_BUILD_TAGS below
+GO_BUILD_TAGS=""
+GOTEST_OPT?= -race -timeout 300s --tags=$(GO_BUILD_TAGS)
+GOTEST_INTEGRATION_OPT?= -race -timeout 360s
+GOTEST_OPT_WITH_COVERAGE = $(GOTEST_OPT) -coverprofile=coverage.txt -covermode=atomic
+GOCMD?= go
+GOTEST=$(GOCMD) test
+GOOS=$(shell $(GOCMD) env GOOS)
+GOARCH=$(shell $(GOCMD) env GOARCH)
+ADDLICENCESE= addlicense
+MDLINKCHECK=markdown-link-check
+MISSPELL=misspell -error
+MISSPELL_CORRECTION=misspell -w
+LINT=golangci-lint
+IMPI=impi
+# BUILD_TYPE should be one of (dev, release).
+BUILD_TYPE?=release
+RUNNING_ON_GITHUB_ACTION=$(GITHUB_ACTIONS)
+
+ALL_PKG_DIRS := $(shell $(GOCMD) list -f '{{ .Dir }}' ./... | sort)
+
+ALL_SRC := $(shell find $(ALL_PKG_DIRS) -name '*.go' \
+                                -not -path '*/third_party/*' \
+                                -not -path '*/local/*' \
+                                -type f | sort)
+
+# All source code and documents. Used in spell check.
+ALL_SRC_AND_DOC := $(shell find $(ALL_PKG_DIRS) -name "*.md" -o -name "*.go" -o -name "*.yaml" \
+                                -not -path '*/third_party/*' \
+                                -type f | sort)
+
+# ALL_PKGS is used with 'go cover'
+ALL_PKGS := $(shell $(GOCMD) list $(sort $(dir $(ALL_SRC))))
+
+pwd:
+	@pwd
+
+all-pkgs:
+	@echo $(ALL_PKGS) | tr ' ' '\n' | sort
+
+all-srcs:
+	@echo $(ALL_SRC) | tr ' ' '\n' | sort
+
+all-pkg-dirs:
+	@echo $(ALL_PKG_DIRS) | tr ' ' '\n' | sort
+
+.DEFAULT_GOAL := common
+
+.PHONY: common
+common: checklicense impi lint misspell
+
+.PHONY: test
+test: ## Runs go tests for the current module.
+	if [ "$(RUNNING_ON_GITHUB_ACTION)" = "true" ]; then \
+		$(GOTEST) $(GOTEST_OPT) -v ./... 2>&1 | tee -a ./foresight-test-report.txt; \
+	else \
+		$(GOTEST) $(GOTEST_OPT) ./...; \
+	fi
+
+.PHONY: do-unit-tests-with-cover
+do-unit-tests-with-cover: ## Runs go unit tests with coverage for the current module.
+	@echo "running $(GOCMD) unit test ./... + coverage in `pwd`"
+	@if [ "$(RUNNING_ON_GITHUB_ACTION)" = "true" ]; then \
+		$(GOTEST) $(GOTEST_OPT_WITH_COVERAGE) -v ./... 2>&1 | tee -a ./foresight-test-report-unit-tests-with-cover.txt; \
+	else \
+		$(GOTEST) $(GOTEST_OPT_WITH_COVERAGE) ./...; \
+	fi
+	$(GOCMD) tool cover -html=coverage.txt -o coverage.html
+
+.PHONY: benchmark
+benchmark: ## Runs go benchmark tests for the current module.
+	$(GOTEST) -bench=. -run=notests --tags=$(GO_BUILD_TAGS) $(ALL_PKGS)
+
+.PHONY: addlicense
+addlicense: ## Runs addlicense tool.
+	echo $(ALL_SRC)
+	@ADDLICENCESEOUT=`$(ADDLICENCESE) -y "" -ignore "vendor/**" -s=only -c 'New Relic Corporation. All rights reserved.' $(ALL_SRC) 2>&1`; \
+		if [ "$$ADDLICENCESEOUT" ]; then \
+			echo "$(ADDLICENCESE) FAILED => add License errors:\n"; \
+			echo "$$ADDLICENCESEOUT\n"; \
+			exit 1; \
+		else \
+			echo "Add License finished successfully"; \
+		fi
+
+.PHONY: checklicense
+checklicense: ## Runs checklicense tool.
+	@ADDLICENCESEOUT=`$(ADDLICENCESE) -check $(ALL_SRC) 2>&1`; \
+		if [ "$$ADDLICENCESEOUT" ]; then \
+			echo "$(ADDLICENCESE) FAILED => add License errors:\n"; \
+			echo "$$ADDLICENCESEOUT\n"; \
+			echo "Use 'make addlicense' to fix this."; \
+			exit 1; \
+		else \
+			echo "Check License finished successfully"; \
+		fi
+
+.PHONY: checklinks
+checklinks: ## Runs checklinks tool.
+	command -v $(MDLINKCHECK) >/dev/null 2>&1 || { echo >&2 "$(MDLINKCHECK) not installed. Run 'npm install -g markdown-link-check'"; exit 1; }
+	find . -name \*.md -print0 | xargs -0 -n1 \
+		$(MDLINKCHECK) -q -c $(SRC_ROOT)/.github/workflows/check_links_config.json || true
+
+.PHONY: fmt
+fmt: ## Formats Go files with gofmt and goimports.
+	gofmt  -w -s ./
+	goimports -w  -local github.com/cristianciutea/opentelemetry-components ./
+
+.PHONY: lint
+lint: checklicense misspell ## Performs checklicense, misspell and golangci-lint checks.
+	$(LINT) run --allow-parallel-runners
+
+.PHONY: tidy
+tidy: ## Updates Go dependencies for the current module.
+	rm -fr go.sum
+	$(GOCMD) mod tidy -compat=1.18
+
+.PHONY: misspell
+misspell: ## Checks spelling mistakes with misspell.
+	@echo "running $(MISSPELL)"
+	@$(MISSPELL) $(ALL_SRC_AND_DOC)
+
+.PHONY: misspell-correction
+misspell-correction: ## Runs misspell correction tool with autosave.
+	$(MISSPELL_CORRECTION) $(ALL_SRC_AND_DOC)
+
+.PHONY: impi
+impi: ## Runs impi tool to verify dependencies order.
+	@$(IMPI) --local github.com/open-telemetry/opentelemetry-collector-contrib --scheme stdThirdPartyLocal ./...
+
+.PHONY: moddownload
+moddownload: ## Runs go mod download for the current module.
+	$(GOCMD) mod download
+
+.PHONY: updatedep
+updatedep: ## Updates Go dependencies for the current module.
+	@$(MAKE) tidy
+
+.PHONY: generate
+generate: ## Runs go generate for the current module.
+	$(GOCMD) generate
+
+.PHONY: help
+help: ## Shows all targets and help from the Makefiles.
+	@grep --no-filename -E '^([a-z.A-Z_%-]+:.*?)##' $(MAKEFILE_LIST) | \
+		awk 'BEGIN {FS = "(:.*?)## ?"}; { \
+			if (length($$1) > 0) { \
+				printf "  \033[36m%-20s\033[0m %s\n", $$1, $$2; \
+			} else { \
+				printf "%s\n", $$2; \
+			} \
+		}'
