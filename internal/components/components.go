@@ -1,10 +1,10 @@
 // Copyright New Relic Corporation. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-package components // import "github.com/cristianciutea/opentelemetry-components/internal/components"
+package components // import "github.com/newrelic/opentelemetry-collector-components/internal/components"
 
 import (
-	"github.com/cristianciutea/opentelemetry-components/receiver/nopreceiver"
+	"github.com/newrelic/opentelemetry-collector-components/receiver/nopreceiver"
 	"go.opentelemetry.io/collector/exporter"
 	"go.opentelemetry.io/collector/exporter/loggingexporter"
 	"go.opentelemetry.io/collector/exporter/otlpexporter"

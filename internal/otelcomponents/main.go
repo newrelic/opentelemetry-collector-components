@@ -1,13 +1,13 @@
 // Copyright New Relic Corporation. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-package otelcomponents // import "github.com/cristianciutea/opentelemetry-components/internal/otelcomponents"
+package otelcomponents // import "github.com/newrelic/opentelemetry-collector-components/internal/otelcomponents"
 
 import (
 	"fmt"
 	"log"
 
-	"github.com/cristianciutea/opentelemetry-components/internal/otelcomponents/internal/version"
+	"github.com/newrelic/opentelemetry-collector-components/internal/otelcomponents/internal/version"
 	"go.opentelemetry.io/collector/component"
 	"go.opentelemetry.io/collector/otelcol"
 )

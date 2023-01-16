@@ -1,4 +1,4 @@
-module github.com/cristianciutea/opentelemetry-components/internal/tools
+module github.com/newrelic/opentelemetry-collector-components/internal/tools
 
 go 1.18
 

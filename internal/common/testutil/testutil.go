@@ -1,7 +1,7 @@
 // Copyright New Relic Corporation. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-package testutil // import "github.com/cristianciutea/opentelemetry-components/internal/common/testutil"
+package testutil // import "github.com/newrelic/opentelemetry-collector-components/internal/common/testutil"
 
 import (
 	"net"

@@ -4,7 +4,7 @@
 //go:build !windows
 // +build !windows
 
-package otelcomponents // import "github.com/cristianciutea/opentelemetry-components/internal/otelcomponents"
+package otelcomponents // import "github.com/newrelic/opentelemetry-collector-components/internal/otelcomponents"
 
 import "go.opentelemetry.io/collector/otelcol"
 

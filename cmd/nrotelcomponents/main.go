@@ -4,8 +4,8 @@
 package main
 
 import (
-	"github.com/cristianciutea/opentelemetry-components/internal/components"
-	"github.com/cristianciutea/opentelemetry-components/internal/otelcomponents"
+	"github.com/newrelic/opentelemetry-collector-components/internal/components"
+	"github.com/newrelic/opentelemetry-collector-components/internal/otelcomponents"
 )
 
 func main() {

@@ -118,7 +118,7 @@ checklinks: ## Runs checklinks tool.
 .PHONY: fmt
 fmt: ## Formats Go files with gofmt and goimports.
 	gofmt  -w -s ./
-	goimports -w  -local github.com/cristianciutea/opentelemetry-components ./
+	goimports -w  -local github.com/newrelic/opentelemetry-collector-components ./
 
 .PHONY: lint
 lint: checklicense misspell ## Performs checklicense, misspell and golangci-lint checks.

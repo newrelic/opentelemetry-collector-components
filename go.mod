@@ -1,9 +1,9 @@
-module github.com/cristianciutea/opentelemetry-components
+module github.com/newrelic/opentelemetry-collector-components
 
 go 1.18
 
 require (
-	github.com/cristianciutea/opentelemetry-components/receiver/nopreceiver v0.0.0-00010101000000-000000000000
+	github.com/newrelic/opentelemetry-collector-components/receiver/nopreceiver v0.0.0-00010101000000-000000000000
 	github.com/open-telemetry/opentelemetry-collector-contrib/exporter/alibabacloudlogserviceexporter v0.68.0
 	github.com/open-telemetry/opentelemetry-collector-contrib/exporter/awscloudwatchlogsexporter v0.68.0
 	github.com/open-telemetry/opentelemetry-collector-contrib/exporter/awsemfexporter v0.68.0
@@ -583,4 +583,4 @@ replace github.com/cloudflare/cloudflare-go => github.com/cyriltovena/cloudflare
 // fork containing a line-buffered logger which should improve logging performance for loki
 replace github.com/go-kit/log => github.com/dannykopping/go-kit-log v0.2.2-0.20221002180827-5591c1641b6b
 
-replace github.com/cristianciutea/opentelemetry-components/receiver/nopreceiver => ./receiver/nopreceiver
+replace github.com/newrelic/opentelemetry-collector-components/receiver/nopreceiver => ./receiver/nopreceiver

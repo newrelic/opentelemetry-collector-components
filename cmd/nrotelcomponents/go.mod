@@ -1,8 +1,8 @@
-module github.com/cristianciutea/opentelemetry-components/cmd/nrotelcomponents
+module github.com/newrelic/opentelemetry-collector-components/cmd/nrotelcomponents
 
 go 1.18
 
-require github.com/cristianciutea/opentelemetry-components v0.0.0
+require github.com/newrelic/opentelemetry-collector-components v0.0.0
 
 require (
 	bitbucket.org/atlassian/go-asap/v2 v2.6.0 // indirect
@@ -107,7 +107,7 @@ require (
 	github.com/containerd/ttrpc v1.1.0 // indirect
 	github.com/coreos/go-oidc v2.2.1+incompatible // indirect
 	github.com/coreos/go-systemd/v22 v22.4.0 // indirect
-	github.com/cristianciutea/opentelemetry-components/receiver/nopreceiver v0.0.0-00010101000000-000000000000 // indirect
+	github.com/newrelic/opentelemetry-collector-components/receiver/nopreceiver v0.0.0-00010101000000-000000000000 // indirect
 	github.com/cyphar/filepath-securejoin v0.2.3 // indirect
 	github.com/danieljoos/wincred v1.1.2 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
@@ -556,7 +556,7 @@ require (
 	skywalking.apache.org/repo/goapi v0.0.0-20220121092418-9c455d0dda3f // indirect
 )
 
-replace github.com/cristianciutea/opentelemetry-components => ../..
+replace github.com/newrelic/opentelemetry-collector-components => ../..
 
 // using fork for support LogpullReceived and LogpullFields for loki - see https://github.com/cloudflare/cloudflare-go/pull/743
 replace github.com/cloudflare/cloudflare-go => github.com/cyriltovena/cloudflare-go v0.27.1-0.20211118103540-ff77400bcb93
@@ -567,6 +567,6 @@ replace github.com/go-kit/log => github.com/dannykopping/go-kit-log v0.2.2-0.202
 // see https://github.com/mattn/go-ieproxy/issues/45
 replace github.com/mattn/go-ieproxy => github.com/mattn/go-ieproxy v0.0.1
 
-replace github.com/cristianciutea/opentelemetry-components/internal/otelcomponents => ../../internal/otelcomponents
+replace github.com/newrelic/opentelemetry-collector-components/internal/otelcomponents => ../../internal/otelcomponents
 
-replace github.com/cristianciutea/opentelemetry-components/receiver/nopreceiver => ../../receiver/nopreceiver
+replace github.com/newrelic/opentelemetry-collector-components/receiver/nopreceiver => ../../receiver/nopreceiver

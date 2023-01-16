@@ -1,4 +1,4 @@
-module github.com/cristianciutea/opentelemetry-components/receiver/nopreceiver
+module github.com/newrelic/opentelemetry-collector-components/receiver/nopreceiver
 
 go 1.18
 
