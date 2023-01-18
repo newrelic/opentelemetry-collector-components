@@ -7,7 +7,7 @@ require (
 	github.com/golangci/golangci-lint v1.50.1
 	github.com/google/addlicense v1.1.0
 	github.com/jcchavezs/porto v0.4.0
-	github.com/open-telemetry/opentelemetry-collector-contrib/cmd/mdatagen v0.68.0
+	github.com/open-telemetry/opentelemetry-collector-contrib/cmd/mdatagen v0.69.0
 	github.com/pavius/impi v0.0.3
 	go.opentelemetry.io/build-tools/checkdoc v0.3.0
 	go.opentelemetry.io/build-tools/crosslink v0.3.0
@@ -173,19 +173,19 @@ require (
 	github.com/yeya24/promlinter v0.2.0 // indirect
 	gitlab.com/bosi/decorder v0.2.3 // indirect
 	go.opentelemetry.io/build-tools v0.3.0 // indirect
-	go.opentelemetry.io/collector/confmap v0.68.0 // indirect
-	go.opentelemetry.io/collector/featuregate v0.68.0 // indirect
-	go.opentelemetry.io/collector/pdata v1.0.0-rc2 // indirect
+	go.opentelemetry.io/collector/confmap v0.69.0 // indirect
+	go.opentelemetry.io/collector/featuregate v0.69.0 // indirect
+	go.opentelemetry.io/collector/pdata v1.0.0-rc3.0.20230109164642-7d168dd20efd // indirect
 	go.uber.org/atomic v1.10.0 // indirect
 	go.uber.org/multierr v1.9.0 // indirect
 	go.uber.org/zap v1.24.0 // indirect
 	golang.org/x/exp v0.0.0-20220722155223-a9213eeb770e // indirect
 	golang.org/x/exp/typeparams v0.0.0-20220827204233-334a2380cb91 // indirect
 	golang.org/x/mod v0.7.0 // indirect
-	golang.org/x/net v0.4.0 // indirect
+	golang.org/x/net v0.5.0 // indirect
 	golang.org/x/sync v0.1.0 // indirect
-	golang.org/x/sys v0.3.0 // indirect
-	golang.org/x/text v0.5.0 // indirect
+	golang.org/x/sys v0.4.0 // indirect
+	golang.org/x/text v0.6.0 // indirect
 	google.golang.org/genproto v0.0.0-20220519153652-3a47de7e79bd // indirect
 	google.golang.org/grpc v1.51.0 // indirect
 	google.golang.org/protobuf v1.28.1 // indirect
