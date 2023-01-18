@@ -1,21 +1,8 @@
-module github.com/newrelic/opentelemetry-collector-components
+module github.com/newrelic/opentelemetry-collector-components/cmd/nrotelcomponents
 
 go 1.18
 
-require (
-	github.com/newrelic/opentelemetry-collector-components/receiver/nopreceiver v0.0.0-00010101000000-000000000000
-	github.com/open-telemetry/opentelemetry-collector-contrib/exporter/prometheusexporter v0.68.0
-	github.com/open-telemetry/opentelemetry-collector-contrib/exporter/prometheusremotewriteexporter v0.68.0
-	github.com/open-telemetry/opentelemetry-collector-contrib/receiver/hostmetricsreceiver v0.68.0
-	github.com/open-telemetry/opentelemetry-collector-contrib/receiver/prometheusreceiver v0.68.0
-	github.com/stretchr/testify v1.8.1
-	go.opentelemetry.io/collector v0.68.0
-	go.opentelemetry.io/collector/component v0.68.0
-	go.opentelemetry.io/collector/exporter/otlpexporter v0.68.0
-	go.opentelemetry.io/collector/processor/batchprocessor v0.68.0
-	go.opentelemetry.io/collector/receiver/otlpreceiver v0.68.0
-	golang.org/x/sys v0.3.0
-)
+require github.com/newrelic/opentelemetry-collector-components v0.0.0
 
 require (
 	cloud.google.com/go/compute v1.14.0 // indirect
@@ -78,15 +65,11 @@ require (
 	github.com/grafana/regexp v0.0.0-20221005093135-b4c2bcb0a4b6 // indirect
 	github.com/hashicorp/consul/api v1.18.0 // indirect
 	github.com/hashicorp/cronexpr v1.1.1 // indirect
-	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/hashicorp/go-cleanhttp v0.5.2 // indirect
 	github.com/hashicorp/go-hclog v1.3.1 // indirect
 	github.com/hashicorp/go-immutable-radix v1.3.1 // indirect
-	github.com/hashicorp/go-multierror v1.1.1 // indirect
 	github.com/hashicorp/go-retryablehttp v0.7.1 // indirect
 	github.com/hashicorp/go-rootcerts v1.0.2 // indirect
-	github.com/hashicorp/go-uuid v1.0.3 // indirect
-	github.com/hashicorp/go-version v1.6.0 // indirect
 	github.com/hashicorp/golang-lru v0.5.4 // indirect
 	github.com/hashicorp/nomad/api v0.0.0-20221102143410-8a95f1239005 // indirect
 	github.com/hashicorp/serf v0.10.1 // indirect
@@ -114,20 +97,23 @@ require (
 	github.com/mitchellh/hashstructure/v2 v2.0.2 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/mitchellh/reflectwalk v1.0.2 // indirect
-	github.com/moby/term v0.0.0-20220808134915-39b0c02b01ae // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/mostynb/go-grpc-compression v1.1.17 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
 	github.com/mwitkow/go-conntrack v0.0.0-20190716064945-2f068394615f // indirect
+	github.com/newrelic/opentelemetry-collector-components/receiver/nopreceiver v0.0.0-00010101000000-000000000000 // indirect
+	github.com/open-telemetry/opentelemetry-collector-contrib/exporter/prometheusexporter v0.68.0 // indirect
+	github.com/open-telemetry/opentelemetry-collector-contrib/exporter/prometheusremotewriteexporter v0.68.0 // indirect
 	github.com/open-telemetry/opentelemetry-collector-contrib/internal/filter v0.68.0 // indirect
 	github.com/open-telemetry/opentelemetry-collector-contrib/pkg/resourcetotelemetry v0.68.0 // indirect
 	github.com/open-telemetry/opentelemetry-collector-contrib/pkg/translator/prometheus v0.68.0 // indirect
 	github.com/open-telemetry/opentelemetry-collector-contrib/pkg/translator/prometheusremotewrite v0.68.0 // indirect
+	github.com/open-telemetry/opentelemetry-collector-contrib/receiver/hostmetricsreceiver v0.68.0 // indirect
+	github.com/open-telemetry/opentelemetry-collector-contrib/receiver/prometheusreceiver v0.68.0 // indirect
 	github.com/opencontainers/go-digest v1.0.0 // indirect
 	github.com/opencontainers/image-spec v1.0.3-0.20211202183452-c5a74bcca799 // indirect
 	github.com/ovh/go-ovh v1.3.0 // indirect
-	github.com/pelletier/go-toml v1.9.5 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
 	github.com/power-devops/perfstat v0.0.0-20220216144756-c35f1ee13d7c // indirect
@@ -144,6 +130,7 @@ require (
 	github.com/sirupsen/logrus v1.9.0 // indirect
 	github.com/spf13/cobra v1.6.1 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
+	github.com/stretchr/testify v1.8.1 // indirect
 	github.com/tidwall/gjson v1.10.2 // indirect
 	github.com/tidwall/match v1.1.1 // indirect
 	github.com/tidwall/pretty v1.2.0 // indirect
@@ -154,10 +141,15 @@ require (
 	github.com/vultr/govultr/v2 v2.17.2 // indirect
 	github.com/yusufpapurcu/wmi v1.2.2 // indirect
 	go.opencensus.io v0.24.0 // indirect
+	go.opentelemetry.io/collector v0.68.0 // indirect
+	go.opentelemetry.io/collector/component v0.68.0 // indirect
 	go.opentelemetry.io/collector/confmap v0.68.0 // indirect
 	go.opentelemetry.io/collector/consumer v0.68.0 // indirect
+	go.opentelemetry.io/collector/exporter/otlpexporter v0.68.0 // indirect
 	go.opentelemetry.io/collector/featuregate v0.68.0 // indirect
 	go.opentelemetry.io/collector/pdata v1.0.0-rc2 // indirect
+	go.opentelemetry.io/collector/processor/batchprocessor v0.68.0 // indirect
+	go.opentelemetry.io/collector/receiver/otlpreceiver v0.68.0 // indirect
 	go.opentelemetry.io/collector/semconv v0.68.0 // indirect
 	go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.37.0 // indirect
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.37.0 // indirect
@@ -177,6 +169,7 @@ require (
 	golang.org/x/mod v0.7.0 // indirect
 	golang.org/x/net v0.4.0 // indirect
 	golang.org/x/oauth2 v0.3.0 // indirect
+	golang.org/x/sys v0.3.0 // indirect
 	golang.org/x/term v0.3.0 // indirect
 	golang.org/x/text v0.5.0 // indirect
 	golang.org/x/time v0.1.0 // indirect
@@ -190,7 +183,6 @@ require (
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
-	gotest.tools/v3 v3.2.0 // indirect
 	k8s.io/api v0.26.0 // indirect
 	k8s.io/apimachinery v0.26.0 // indirect
 	k8s.io/client-go v0.26.0 // indirect
@@ -202,25 +194,7 @@ require (
 	sigs.k8s.io/yaml v1.3.0 // indirect
 )
 
-// Replace references to modules that are in this repository with their relateive paths
-// so that we always build with current (latest) version of the source code.
-
-// see https://github.com/google/gnostic/issues/262
-replace github.com/googleapis/gnostic v0.5.6 => github.com/googleapis/gnostic v0.5.5
-
-// see https://github.com/open-telemetry/opentelemetry-collector-contrib/pull/12322#issuecomment-1185029670
-replace github.com/docker/go-connections v0.4.1-0.20210727194412-58542c764a11 => github.com/docker/go-connections v0.4.0
-
-retract (
-	v0.65.0
-	v0.37.0 // Contains dependencies on v0.36.0 components, which should have been updated to v0.37.0.
-)
-
-// see https://github.com/distribution/distribution/issues/3590
-exclude github.com/docker/distribution v2.8.0+incompatible
-
-// see https://github.com/mattn/go-ieproxy/issues/45
-replace github.com/mattn/go-ieproxy => github.com/mattn/go-ieproxy v0.0.1
+replace github.com/newrelic/opentelemetry-collector-components => ../..
 
 // using fork for support LogpullReceived and LogpullFields for loki - see https://github.com/cloudflare/cloudflare-go/pull/743
 replace github.com/cloudflare/cloudflare-go => github.com/cyriltovena/cloudflare-go v0.27.1-0.20211118103540-ff77400bcb93
@@ -228,4 +202,9 @@ replace github.com/cloudflare/cloudflare-go => github.com/cyriltovena/cloudflare
 // fork containing a line-buffered logger which should improve logging performance for loki
 replace github.com/go-kit/log => github.com/dannykopping/go-kit-log v0.2.2-0.20221002180827-5591c1641b6b
 
-replace github.com/newrelic/opentelemetry-collector-components/receiver/nopreceiver => ./receiver/nopreceiver
+// see https://github.com/mattn/go-ieproxy/issues/45
+replace github.com/mattn/go-ieproxy => github.com/mattn/go-ieproxy v0.0.1
+
+replace github.com/newrelic/opentelemetry-collector-components/internal/otelcomponents => ../../internal/otelcomponents
+
+replace github.com/newrelic/opentelemetry-collector-components/receiver/nopreceiver => ../../receiver/nopreceiver
