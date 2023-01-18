@@ -4,7 +4,7 @@ go 1.18
 
 require (
 	github.com/stretchr/testify v1.8.1
-	go.opentelemetry.io/collector/featuregate v0.68.0
+	go.opentelemetry.io/collector/featuregate v0.69.1
 )
 
 require (
