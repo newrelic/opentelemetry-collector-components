@@ -21,7 +21,9 @@ Keep in mind that when you submit your pull request, you'll need to sign the CLA
 
 ## Development
 
-[Nopreceiver](./receiver/nopreceiver/) is a "no operation" component of type receiver that can be used as helper package when starting a new component.
+Before writing any code, check the [development guides](./DEVELOPMENT.md) and open an issue with the corresponding information. For current components, you can check its maintainers in the [CODEOWNERS file](./.github/CODEOWNERS).
+
+[The nopreceiver](./receiver/nopreceiver/) is a "no operation" component of type receiver that can be used as helper package when starting a new component.
 
 ### Requirements
 
