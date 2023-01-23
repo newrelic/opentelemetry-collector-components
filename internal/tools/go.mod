@@ -9,7 +9,7 @@ require (
 	github.com/jcchavezs/porto v0.4.0
 	github.com/open-telemetry/opentelemetry-collector-contrib/cmd/mdatagen v0.68.0
 	github.com/pavius/impi v0.0.3
-	go.opentelemetry.io/build-tools/checkdoc v0.3.0
+	go.opentelemetry.io/build-tools/checkdoc v0.5.0
 	go.opentelemetry.io/build-tools/crosslink v0.3.0
 	golang.org/x/tools v0.4.0
 )
