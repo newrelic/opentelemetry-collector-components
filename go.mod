@@ -14,7 +14,7 @@ require (
 	go.opentelemetry.io/collector/exporter/otlpexporter v0.68.0
 	go.opentelemetry.io/collector/processor/batchprocessor v0.68.0
 	go.opentelemetry.io/collector/receiver/otlpreceiver v0.68.0
-	golang.org/x/sys v0.3.0
+	golang.org/x/sys v0.7.0
 )
 
 require (
