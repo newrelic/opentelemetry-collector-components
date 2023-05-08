@@ -18,6 +18,8 @@ FIND_MOD_ARGS=-type f -name "go.mod"
 TO_MOD_DIR=dirname {} \; | sort | grep -E '^./'
 EX_COMPONENTS=-not -path "./receiver/*" -not -path "./processor/*" -not -path "./exporter/*" -not -path "./extension/*"
 EX_INTERNAL=-not -path "./internal/*"
+EX_INTERNAL_TOOLS=-not -path "./internal/tools/*"
+TOOLS_MOD_DIR := ./internal/tools
 
 # NONROOT_MODS includes ./* dirs (excludes . dir)
 NONROOT_MODS := $(shell find . $(FIND_MOD_ARGS) -exec $(TO_MOD_DIR) )
@@ -28,7 +30,7 @@ RECEIVER_MODS := $(RECEIVER_MODS_0) $(RECEIVER_MODS_1)
 PROCESSOR_MODS := $(shell find ./processor/* $(FIND_MOD_ARGS) -exec $(TO_MOD_DIR) )
 EXPORTER_MODS := $(shell find ./exporter/* $(FIND_MOD_ARGS) -exec $(TO_MOD_DIR) )
 EXTENSION_MODS := $(shell find ./extension/* $(FIND_MOD_ARGS) -exec $(TO_MOD_DIR) )
-INTERNAL_MODS := $(shell find ./internal/* $(FIND_MOD_ARGS) -exec $(TO_MOD_DIR) )
+INTERNAL_MODS := $(shell find ./internal/* $(EX_INTERNAL_TOOLS) $(FIND_MOD_ARGS) -exec $(TO_MOD_DIR) )
 OTHER_MODS := $(shell find . $(EX_COMPONENTS) $(EX_INTERNAL) $(FIND_MOD_ARGS) -exec $(TO_MOD_DIR) ) $(PWD)
 ALL_MODS := $(RECEIVER_MODS) $(PROCESSOR_MODS) $(EXPORTER_MODS) $(EXTENSION_MODS) $(INTERNAL_MODS) $(OTHER_MODS)
 
@@ -174,7 +176,6 @@ for-other-target: $(OTHER_MODS)
 all-pwd:
 	$(MAKE) $(FOR_GROUP_TARGET) TARGET="pwd"
 
-TOOLS_MOD_DIR := ./internal/tools
 .PHONY: install-tools
 install-tools:
 	cd $(TOOLS_MOD_DIR) && $(GOCMD) install github.com/client9/misspell/cmd/misspell
@@ -231,6 +232,10 @@ checkdoc: ## Checks that all components have documentation using checkdoc.
 .PHONY: all-checklinks
 all-checklinks: ## Runs checklinks for the given $(FOR_GROUP_TARGET).
 	$(MAKE) $(FOR_GROUP_TARGET) TARGET="checklinks"
+
+.PHONY: all-checkthirdparty
+all-checkthirdparty: ## Runs checklinks for the given $(FOR_GROUP_TARGET).
+	$(MAKE) $(FOR_GROUP_TARGET) TARGET="checkthirdparty"
 
 # Function to execute a command. Note the empty line before endef to make sure each command
 # gets executed separately instead of concatenated with previous one.
