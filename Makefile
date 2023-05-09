@@ -187,6 +187,7 @@ install-tools:
 	cd $(TOOLS_MOD_DIR) && $(GOCMD) install golang.org/x/tools/cmd/goimports
 	cd $(TOOLS_MOD_DIR) && $(GOCMD) install github.com/jcchavezs/porto/cmd/porto
 	cd $(TOOLS_MOD_DIR) && $(GOCMD) install go.opentelemetry.io/build-tools/crosslink
+	cd $(TOOLS_MOD_DIR) && $(GOCMD) install go.elastic.co/go-licence-detector
 
 .PHONY: run
 run:

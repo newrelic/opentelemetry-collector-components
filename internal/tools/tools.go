@@ -12,6 +12,7 @@ import (
 	_ "github.com/google/addlicense"
 	_ "github.com/jcchavezs/porto/cmd/porto"
 	_ "github.com/pavius/impi/cmd/impi"
+	_ "go.elastic.co/go-licence-detector"
 	_ "go.opentelemetry.io/build-tools/checkdoc"
 	_ "go.opentelemetry.io/build-tools/crosslink"
 	_ "golang.org/x/tools/cmd/goimports"
