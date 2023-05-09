@@ -230,11 +230,11 @@ checkdoc: ## Checks that all components have documentation using checkdoc.
 	checkdoc --project-path $(CURDIR) --component-rel-path $(COMP_REL_PATH) --module-name $(MOD_NAME)
 
 .PHONY: all-checklinks
-all-checklinks: ## Runs checklinks for the given $(FOR_GROUP_TARGET).
+all-checklinks: install-tools ## Runs checklinks for the given $(FOR_GROUP_TARGET).
 	$(MAKE) $(FOR_GROUP_TARGET) TARGET="checklinks"
 
 .PHONY: all-checkthirdparty
-all-checkthirdparty: ## Runs checklinks for the given $(FOR_GROUP_TARGET).
+all-checkthirdparty: install-tools ## Runs checklinks for the given $(FOR_GROUP_TARGET).
 	$(MAKE) $(FOR_GROUP_TARGET) TARGET="checkthirdparty"
 
 # Function to execute a command. Note the empty line before endef to make sure each command
