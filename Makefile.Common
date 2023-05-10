@@ -157,15 +157,15 @@ generate: ## Runs go generate for the current module.
 .PHONY: thirdparty
 thirdparty: OUT ?= THIRD_PARTY_NOTICES.md
 thirdparty: ## Runs go generate for the current module.
+	@command -v go-licence-detector &> /dev/null || (echo "go-license-detector tool not found, install it from the base directory with \"make install-tools\"" && exit 1)
 	$(GOCMD) list -mod=mod -m -json all | go-licence-detector \
         -rules $(SRC_ROOT)/assets/license/rules.json \
         -noticeTemplate $(SRC_ROOT)/assets/license/THIRD_PARTY_NOTICES.md.tmpl \
         -noticeOut $(OUT)
 
 .PHONY: checkthirdparty
-checkthirdparty:
-	@OUT=THIRD_PARTY_NOTICES_GENERATED.md $(MAKE) thirdparty
-	@diff THIRD_PARTY_NOTICES_GENERATED.md THIRD_PARTY_NOTICES.md 2>&1 > /dev/null || (echo "THIRD_PARTY_NOTICES.md should be generated"; exit 1)
+checkthirdparty: thirdparty
+	@git diff --name-only | grep -q "THIRD_PARTY_NOTICES.md" && ( echo "Third party notices out of date, please run \"make thirdparty\" and commit the changes in this PR."; exit 1; ) || exit 0
 
 .PHONY: help
 help: ## Shows all targets and help from the Makefiles.
