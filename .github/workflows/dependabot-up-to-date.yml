@@ -1,0 +1,22 @@
+name: Dependabot
+
+on:
+  push:
+    branches:
+      - '**'
+
+jobs:
+  verify-dependabot-up-to-date:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Check dependabot.yml is up to date
+        run: |
+          DEPENDABOT_PATH=/tmp/dependabot.yml make gendependabot
+           if ! diff /tmp/dependabot.yml .github/dependabot.yml > /dev/null ;then 
+            echo "Error: dependabot.yml is not up to date"
+            echo "run make gendependabot and commit .github/dependabot.yml file"
+            exit 1
+          fi

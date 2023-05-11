@@ -104,7 +104,7 @@ for-all:
 	 	$${CMD} ); \
 	done
 
-DEPENDABOT_PATH=".github/dependabot.yml"
+DEPENDABOT_PATH ?= ".github/dependabot.yml"
 .PHONY: gendependabot
 gendependabot: ## Generates the dependabot configuration file.
 	@echo "Recreating ${DEPENDABOT_PATH} file"

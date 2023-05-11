@@ -26,3 +26,7 @@ updates:
     directory: "/internal/tools"
     schedule:
       interval: "weekly"
+  - package-ecosystem: "gomod"
+    directory: "/receiver/nopreceiver"
+    schedule:
+      interval: "weekly"
