@@ -165,7 +165,7 @@ thirdparty: ## Runs go generate for the current module.
 
 .PHONY: checkthirdparty
 checkthirdparty: thirdparty
-	@git diff --name-only | grep -q "THIRD_PARTY_NOTICES.md" && ( echo "Third party notices out of date, please run \"make thirdparty\" and commit the changes in this PR."; exit 1; ) || exit 0
+	@git diff --name-only | grep -q "THIRD_PARTY_NOTICES.md" && { echo "Third party notices out of date, please run \"make thirdparty\" and commit the changes in this PR."; exit 1; } || exit 0
 
 .PHONY: help
 help: ## Shows all targets and help from the Makefiles.
