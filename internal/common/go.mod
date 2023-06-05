@@ -3,7 +3,7 @@ module github.com/newrelic/opentelemetry-collector-components/internal/common
 go 1.18
 
 require (
-	github.com/stretchr/testify v1.8.1
+	github.com/stretchr/testify v1.8.4
 	go.opentelemetry.io/collector/featuregate v0.68.0
 )
 
