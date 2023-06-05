@@ -10,7 +10,7 @@ require (
 	github.com/open-telemetry/opentelemetry-collector-contrib/cmd/mdatagen v0.68.0
 	github.com/pavius/impi v0.0.3
 	go.elastic.co/go-licence-detector v0.6.0
-	go.opentelemetry.io/build-tools/checkdoc v0.3.0
+	go.opentelemetry.io/build-tools/checkdoc v0.8.0
 	go.opentelemetry.io/build-tools/crosslink v0.3.0
 	golang.org/x/tools v0.4.0
 )
@@ -165,7 +165,7 @@ require (
 	github.com/ssgreg/nlreturn/v2 v2.2.1 // indirect
 	github.com/stbenjam/no-sprintf-host-port v0.1.1 // indirect
 	github.com/stretchr/objx v0.5.0 // indirect
-	github.com/stretchr/testify v1.8.1 // indirect
+	github.com/stretchr/testify v1.8.4 // indirect
 	github.com/subosito/gotenv v1.4.1 // indirect
 	github.com/tdakkota/asciicheck v0.1.1 // indirect
 	github.com/tetafro/godot v1.4.11 // indirect
