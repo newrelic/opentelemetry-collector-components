@@ -1,0 +1,9 @@
+default:
+all_set:
+  metrics:
+    hello.requests:
+      enabled: true
+none_set:
+  metrics:
+    hello.requests:
+      enabled: false

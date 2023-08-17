@@ -3,7 +3,6 @@
 package metadata
 
 import (
-	"reflect"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -14,95 +13,93 @@ import (
 	"go.uber.org/zap/zaptest/observer"
 )
 
-func TestDefaultMetrics(t *testing.T) {
-	start := pcommon.Timestamp(1_000_000_000)
-	ts := pcommon.Timestamp(1_000_001_000)
-	mb := NewMetricsBuilder(DefaultMetricsSettings(), receivertest.NewNopCreateSettings(), WithStartTime(start))
-	enabledMetrics := make(map[string]bool)
+type testConfigCollection int
 
-	enabledMetrics["hello.requests"] = true
-	mb.RecordHelloRequestsDataPoint(ts, 1, "attr-val")
+const (
+	testSetDefault testConfigCollection = iota
+	testSetAll
+	testSetNone
+)
 
-	metrics := mb.Emit()
-
-	assert.Equal(t, 1, metrics.ResourceMetrics().Len())
-	sm := metrics.ResourceMetrics().At(0).ScopeMetrics()
-	assert.Equal(t, 1, sm.Len())
-	ms := sm.At(0).Metrics()
-	assert.Equal(t, len(enabledMetrics), ms.Len())
-	seenMetrics := make(map[string]bool)
-	for i := 0; i < ms.Len(); i++ {
-		assert.True(t, enabledMetrics[ms.At(i).Name()])
-		seenMetrics[ms.At(i).Name()] = true
+func TestMetricsBuilder(t *testing.T) {
+	tests := []struct {
+		name      string
+		configSet testConfigCollection
+	}{
+		{
+			name:      "default",
+			configSet: testSetDefault,
+		},
+		{
+			name:      "all_set",
+			configSet: testSetAll,
+		},
+		{
+			name:      "none_set",
+			configSet: testSetNone,
+		},
 	}
-	assert.Equal(t, len(enabledMetrics), len(seenMetrics))
-}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			start := pcommon.Timestamp(1_000_000_000)
+			ts := pcommon.Timestamp(1_000_001_000)
+			observedZapCore, observedLogs := observer.New(zap.WarnLevel)
+			settings := receivertest.NewNopCreateSettings()
+			settings.Logger = zap.New(observedZapCore)
+			mb := NewMetricsBuilder(loadMetricsBuilderConfig(t, test.name), settings, WithStartTime(start))
 
-func TestAllMetrics(t *testing.T) {
-	start := pcommon.Timestamp(1_000_000_000)
-	ts := pcommon.Timestamp(1_000_001_000)
-	metricsSettings := MetricsSettings{
-		HelloRequests: MetricSettings{Enabled: true},
+			expectedWarnings := 0
+			assert.Equal(t, expectedWarnings, observedLogs.Len())
+
+			defaultMetricsCount := 0
+			allMetricsCount := 0
+
+			defaultMetricsCount++
+			allMetricsCount++
+			mb.RecordHelloRequestsDataPoint(ts, 1, "greeter-val")
+
+			res := pcommon.NewResource()
+			res.Attributes().PutStr("k1", "v1")
+			metrics := mb.Emit(WithResource(res))
+
+			if test.configSet == testSetNone {
+				assert.Equal(t, 0, metrics.ResourceMetrics().Len())
+				return
+			}
+
+			assert.Equal(t, 1, metrics.ResourceMetrics().Len())
+			rm := metrics.ResourceMetrics().At(0)
+			assert.Equal(t, res, rm.Resource())
+			assert.Equal(t, 1, rm.ScopeMetrics().Len())
+			ms := rm.ScopeMetrics().At(0).Metrics()
+			if test.configSet == testSetDefault {
+				assert.Equal(t, defaultMetricsCount, ms.Len())
+			}
+			if test.configSet == testSetAll {
+				assert.Equal(t, allMetricsCount, ms.Len())
+			}
+			validatedMetrics := make(map[string]bool)
+			for i := 0; i < ms.Len(); i++ {
+				switch ms.At(i).Name() {
+				case "hello.requests":
+					assert.False(t, validatedMetrics["hello.requests"], "Found a duplicate in the metrics slice: hello.requests")
+					validatedMetrics["hello.requests"] = true
+					assert.Equal(t, pmetric.MetricTypeSum, ms.At(i).Type())
+					assert.Equal(t, 1, ms.At(i).Sum().DataPoints().Len())
+					assert.Equal(t, "Total number of hello requests since it started", ms.At(i).Description())
+					assert.Equal(t, "requests", ms.At(i).Unit())
+					assert.Equal(t, true, ms.At(i).Sum().IsMonotonic())
+					assert.Equal(t, pmetric.AggregationTemporalityCumulative, ms.At(i).Sum().AggregationTemporality())
+					dp := ms.At(i).Sum().DataPoints().At(0)
+					assert.Equal(t, start, dp.StartTimestamp())
+					assert.Equal(t, ts, dp.Timestamp())
+					assert.Equal(t, pmetric.NumberDataPointValueTypeInt, dp.ValueType())
+					assert.Equal(t, int64(1), dp.IntValue())
+					attrVal, ok := dp.Attributes().Get("greeter")
+					assert.True(t, ok)
+					assert.EqualValues(t, "greeter-val", attrVal.Str())
+				}
+			}
+		})
 	}
-	observedZapCore, observedLogs := observer.New(zap.WarnLevel)
-	settings := receivertest.NewNopCreateSettings()
-	settings.Logger = zap.New(observedZapCore)
-	mb := NewMetricsBuilder(metricsSettings, settings, WithStartTime(start))
-
-	assert.Equal(t, 0, observedLogs.Len())
-
-	mb.RecordHelloRequestsDataPoint(ts, 1, "attr-val")
-
-	metrics := mb.Emit()
-
-	assert.Equal(t, 1, metrics.ResourceMetrics().Len())
-	rm := metrics.ResourceMetrics().At(0)
-	attrCount := 0
-	assert.Equal(t, attrCount, rm.Resource().Attributes().Len())
-
-	assert.Equal(t, 1, rm.ScopeMetrics().Len())
-	ms := rm.ScopeMetrics().At(0).Metrics()
-	allMetricsCount := reflect.TypeOf(MetricsSettings{}).NumField()
-	assert.Equal(t, allMetricsCount, ms.Len())
-	validatedMetrics := make(map[string]struct{})
-	for i := 0; i < ms.Len(); i++ {
-		switch ms.At(i).Name() {
-		case "hello.requests":
-			assert.Equal(t, pmetric.MetricTypeSum, ms.At(i).Type())
-			assert.Equal(t, 1, ms.At(i).Sum().DataPoints().Len())
-			assert.Equal(t, "Total number of hello requests since it started", ms.At(i).Description())
-			assert.Equal(t, "requests", ms.At(i).Unit())
-			assert.Equal(t, true, ms.At(i).Sum().IsMonotonic())
-			assert.Equal(t, pmetric.AggregationTemporalityCumulative, ms.At(i).Sum().AggregationTemporality())
-			dp := ms.At(i).Sum().DataPoints().At(0)
-			assert.Equal(t, start, dp.StartTimestamp())
-			assert.Equal(t, ts, dp.Timestamp())
-			assert.Equal(t, pmetric.NumberDataPointValueTypeInt, dp.ValueType())
-			assert.Equal(t, int64(1), dp.IntValue())
-			attrVal, ok := dp.Attributes().Get("greeter")
-			assert.True(t, ok)
-			assert.EqualValues(t, "attr-val", attrVal.Str())
-			validatedMetrics["hello.requests"] = struct{}{}
-		}
-	}
-	assert.Equal(t, allMetricsCount, len(validatedMetrics))
-}
-
-func TestNoMetrics(t *testing.T) {
-	start := pcommon.Timestamp(1_000_000_000)
-	ts := pcommon.Timestamp(1_000_001_000)
-	metricsSettings := MetricsSettings{
-		HelloRequests: MetricSettings{Enabled: false},
-	}
-	observedZapCore, observedLogs := observer.New(zap.WarnLevel)
-	settings := receivertest.NewNopCreateSettings()
-	settings.Logger = zap.New(observedZapCore)
-	mb := NewMetricsBuilder(metricsSettings, settings, WithStartTime(start))
-
-	assert.Equal(t, 0, observedLogs.Len())
-	mb.RecordHelloRequestsDataPoint(ts, 1, "attr-val")
-
-	metrics := mb.Emit()
-
-	assert.Equal(t, 0, metrics.ResourceMetrics().Len())
 }

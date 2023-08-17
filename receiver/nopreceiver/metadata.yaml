@@ -1,4 +1,11 @@
-name: nop
+type: nop
+
+status:
+  class: receiver
+  stability:
+    development: [metrics]
+  codeowners:
+    active: [newrelic/caos]
 
 attributes:
   greeter:
