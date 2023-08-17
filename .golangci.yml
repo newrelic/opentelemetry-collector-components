@@ -32,16 +32,10 @@ linters-settings:
     allow-unused: false
     # Enable to require nolint directives to mention the specific linter being suppressed. Default is false.
     require-specific: true
-  depguard:
-    list-type: blacklist
-    include-go-root: false
-    packages-with-error-message:
-      - log: 'for logging, use: log "github.com/sirupsen/logrus"'
 
 linters:
   disable-all: true
   enable:
-    - depguard
     - deadcode
     - errcheck
     - goimports
