@@ -21,19 +21,19 @@ t/.
 
 
 
+## [github.com/google/go-cmp](https://github.com/google/go-cmp)
+
+Distributed under the following license(s):
+
+* BSD-3-Clause
+
+
+
 ## [github.com/stretchr/testify](https://github.com/stretchr/testify)
 
 Distributed under the following license(s):
 
 * MIT
-
-
-
-## [go.opentelemetry.io/collector](https://go.opentelemetry.io/collector)
-
-Distributed under the following license(s):
-
-* Apache-2.0
 
 
 
@@ -62,6 +62,14 @@ Distributed under the following license(s):
 
 
 ## [go.opentelemetry.io/collector/pdata](https://go.opentelemetry.io/collector/pdata)
+
+Distributed under the following license(s):
+
+* Apache-2.0
+
+
+
+## [go.opentelemetry.io/collector/receiver](https://go.opentelemetry.io/collector/receiver)
 
 Distributed under the following license(s):
 
