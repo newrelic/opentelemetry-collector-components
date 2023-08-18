@@ -27,7 +27,7 @@ Before writing any code, check the [development guides](./DEVELOPMENT.md) and op
 
 ### Requirements
 
-* Go 1.18.0+
+* Go 1.20.0+
 * GNU Make
 * git
 
