@@ -37,7 +37,7 @@ func greeterMetrics(name string) pmetric.Metrics {
 	return md
 }
 
-func scrape(ctx context.Context) (pmetric.Metrics, error) {
+func scrape(_ context.Context) (pmetric.Metrics, error) {
 	md := pmetric.NewMetrics()
 
 	greeterMetrics("bob").ResourceMetrics().CopyTo(md.ResourceMetrics())
