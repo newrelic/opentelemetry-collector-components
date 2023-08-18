@@ -1,0 +1,17 @@
+default:
+all_set:
+  metrics:
+    apm.service.apdex:
+      enabled: true
+    apm.service.error.count:
+      enabled: true
+    apm.service.transaction.duration:
+      enabled: true
+none_set:
+  metrics:
+    apm.service.apdex:
+      enabled: false
+    apm.service.error.count:
+      enabled: false
+    apm.service.transaction.duration:
+      enabled: false

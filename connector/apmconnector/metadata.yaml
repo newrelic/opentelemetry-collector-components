@@ -1,0 +1,32 @@
+type: apm
+
+status:
+  class: connector
+  stability:
+    development: [traces_to_metrics, traces_to_logs, traces_to_traces]
+  codeowners:
+    active: [jlegoff, sdaubin]
+
+metrics:
+  apm.service.transaction.duration:
+    description: Duration of the transaction
+    enabled: true
+    unit: s
+    # FIXME: should be histogram
+    sum:
+      value_type: double
+      aggregation: delta
+  apm.service.apdex:
+    description: Apdex value
+    enabled: true
+    unit: 1
+    sum:
+      value_type: double
+      aggregation: delta
+  apm.service.error.count:
+    description: Number of transaction errors
+    enabled: true
+    unit: 1
+    sum:
+      value_type: double
+      aggregation: delta
