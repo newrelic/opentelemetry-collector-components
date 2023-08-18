@@ -29,12 +29,4 @@ Distributed under the following license(s):
 
 
 
-## [go.opentelemetry.io/collector/featuregate](https://go.opentelemetry.io/collector/featuregate)
-
-Distributed under the following license(s):
-
-* Apache-2.0
-
-
-
 
