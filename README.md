@@ -5,7 +5,7 @@
 
 OpenTelemetry Collector components is a New Relic's repository that contains custom [Collector's components](https://opentelemetry.io/docs/collector/). Those components are either in process of being accepted by the community or removed (e.g deprecated) from upstream.
 
-Components owners are specified in [CODEOWNERS](./github/CODEOWNERS) file.
+Components owners are specified in [CODEOWNERS](./.github/CODEOWNERS) file.
 
 ## Community
 
