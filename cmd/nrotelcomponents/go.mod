@@ -1,6 +1,6 @@
 module github.com/newrelic/opentelemetry-collector-components/cmd/nrotelcomponents
 
-go 1.18
+go 1.20
 
 require github.com/newrelic/opentelemetry-collector-components v0.0.0
 

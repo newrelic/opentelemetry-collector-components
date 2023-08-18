@@ -1,6 +1,6 @@
 module github.com/newrelic/opentelemetry-collector-components/internal/tools
 
-go 1.18
+go 1.20
 
 require (
 	github.com/client9/misspell v0.3.4
