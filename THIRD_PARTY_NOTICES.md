@@ -85,6 +85,14 @@ Distributed under the following license(s):
 
 
 
+## [go.opentelemetry.io/collector/exporter](https://go.opentelemetry.io/collector/exporter)
+
+Distributed under the following license(s):
+
+* Apache-2.0
+
+
+
 ## [go.opentelemetry.io/collector/exporter/otlpexporter](https://go.opentelemetry.io/collector/exporter/otlpexporter)
 
 Distributed under the following license(s):
@@ -93,7 +101,31 @@ Distributed under the following license(s):
 
 
 
+## [go.opentelemetry.io/collector/extension](https://go.opentelemetry.io/collector/extension)
+
+Distributed under the following license(s):
+
+* Apache-2.0
+
+
+
+## [go.opentelemetry.io/collector/processor](https://go.opentelemetry.io/collector/processor)
+
+Distributed under the following license(s):
+
+* Apache-2.0
+
+
+
 ## [go.opentelemetry.io/collector/processor/batchprocessor](https://go.opentelemetry.io/collector/processor/batchprocessor)
+
+Distributed under the following license(s):
+
+* Apache-2.0
+
+
+
+## [go.opentelemetry.io/collector/receiver](https://go.opentelemetry.io/collector/receiver)
 
 Distributed under the following license(s):
 
