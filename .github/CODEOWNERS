@@ -3,3 +3,4 @@ internal/common/                @newrelic/caos
 internal/tools/                 @newrelic/caos
 cmd/nrotelcomponents/           @newrelic/caos
 connector/apmconnector/         @jlegoff @sdaubin
+processor/apmprocessor/         @jlegoff @sdaubin
