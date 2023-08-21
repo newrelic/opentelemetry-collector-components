@@ -32,7 +32,7 @@ func (c *ApmTraceConnector) ConsumeTraces(ctx context.Context, td ptrace.Traces)
 func (c *ApmTraceConnector) Start(_ context.Context, _ component.Host) error {
 	c.logger.Info("Starting the New Relic APM Trace Connector")
 	if c.config.ApdexT == 0 {
-		c.config.ApdexT = 0.5
+		c.config.ApdexT = defaultApdexT
 	}
 	return nil
 }

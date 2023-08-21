@@ -13,6 +13,8 @@ import (
 	"go.uber.org/zap"
 )
 
+const defaultApdexT = 0.5
+
 type ApmMetricConnector struct {
 	config *Config
 	logger *zap.Logger
@@ -26,17 +28,13 @@ func (c *ApmMetricConnector) Capabilities() consumer.Capabilities {
 
 func (c *ApmMetricConnector) ConsumeTraces(ctx context.Context, td ptrace.Traces) error {
 	metrics := ConvertTraces(c.logger, c.config, td)
-	err := c.metricsConsumer.ConsumeMetrics(ctx, metrics)
-	if err != nil {
-		return err
-	}
-	return nil
+	return c.metricsConsumer.ConsumeMetrics(ctx, metrics)
 }
 
 func (c *ApmMetricConnector) Start(_ context.Context, _ component.Host) error {
 	c.logger.Info("Starting the APM Metric Connector")
 	if c.config.ApdexT == 0 {
-		c.config.ApdexT = 0.5
+		c.config.ApdexT = defaultApdexT
 	}
 	return nil
 }

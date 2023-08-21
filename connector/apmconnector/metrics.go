@@ -29,7 +29,7 @@ func NewMeterProvider() *MeterProvider {
 }
 
 func (meterProvider *MeterProvider) getOrCreateResourceMetrics(attributes pcommon.Map) *ResourceMetrics {
-	key := GetKeyFromMap(attributes)
+	key := getKeyFromMap(attributes)
 	if metrics, exists := meterProvider.resourceMetrics[key]; exists {
 		return metrics
 	}
@@ -110,16 +110,16 @@ func NanosToSeconds(nanos int64) float64 {
 	return float64(nanos) / 1e9
 }
 
-func GetKeyFromMap(pMap pcommon.Map) string {
+func getKeyFromMap(pMap pcommon.Map) string {
 	m := make(map[string]string, pMap.Len())
 	pMap.Range(func(k string, v pcommon.Value) bool {
 		m[k] = v.AsString()
 		return true
 	})
-	return GetKey(m)
+	return getKey(m)
 }
 
-func GetKey(m map[string]string) string {
+func getKey(m map[string]string) string {
 	// map order is not guaranteed, we need to hash key values in order
 	allKeys := make([]string, len(m))
 	for k := range m {
@@ -131,10 +131,10 @@ func GetKey(m map[string]string) string {
 		toHash = append(toHash, k)
 		toHash = append(toHash, m[k])
 	}
-	return Hash(toHash)
+	return hash(toHash)
 }
 
-func Hash(objs []string) string {
+func hash(objs []string) string {
 	digester := crypto.MD5.New()
 	for _, ob := range objs {
 		fmt.Fprint(digester, ob)

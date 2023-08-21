@@ -116,29 +116,29 @@ func (transaction *Transaction) SetRootSpan(span ptrace.Span) {
 func (transaction *Transaction) AddSpan(span ptrace.Span) {
 	if span.Kind() == ptrace.SpanKindServer {
 		transaction.SetRootSpan(span)
+		return
+	}
+	isRoot := span.ParentSpanID().IsEmpty()
+	if isRoot {
+		transaction.SetRootSpan(span)
 	} else {
-		isRoot := span.ParentSpanID().IsEmpty()
-		if isRoot {
-			transaction.SetRootSpan(span)
-		} else {
-			parentSpanID := span.ParentSpanID().String()
-			newDuration := DurationInNanos(span)
+		parentSpanID := span.ParentSpanID().String()
+		newDuration := DurationInNanos(span)
 
-			if measurement, exists := transaction.Measurements[parentSpanID]; exists {
-				measurement.ExclusiveDurationNanos -= newDuration
-			} else {
-				transaction.SpanToChildDuration[parentSpanID] += newDuration
-			}
-		}
-
-		if span.Kind() == ptrace.SpanKindClient {
-			// filter out db calls that have no parent (so no transaction)
-			if !isRoot {
-				transaction.ProcessClientSpan(span)
-			}
+		if measurement, exists := transaction.Measurements[parentSpanID]; exists {
+			measurement.ExclusiveDurationNanos -= newDuration
 		} else {
-			transaction.ProcessGenericSpan(span)
+			transaction.SpanToChildDuration[parentSpanID] += newDuration
 		}
+	}
+
+	if span.Kind() == ptrace.SpanKindClient {
+		// filter out db calls that have no parent (so no transaction)
+		if !isRoot {
+			transaction.ProcessClientSpan(span)
+		}
+	} else {
+		transaction.ProcessGenericSpan(span)
 	}
 }
 
@@ -153,31 +153,34 @@ func (transaction *Transaction) AddMeasurement(measurement *Measurement) {
 }
 
 func (transaction *Transaction) ProcessDatabaseSpan(span ptrace.Span) bool {
-	if dbSystem, dbSystemPresent := span.Attributes().Get(DbSystemAttributeName); dbSystemPresent {
-		if dbOperation, dbOperationPresent := span.Attributes().Get(DbOperationAttributeName); dbOperationPresent {
-			dbTable, _ := transaction.sqlParser.ParseDbTableFromSpan(span)
-			attributes := pcommon.NewMap()
-			attributes.EnsureCapacity(10)
-			attributes.PutStr(DbOperationAttributeName, dbOperation.AsString())
-			attributes.PutStr(DbSystemAttributeName, dbSystem.AsString())
-			attributes.PutStr(DbSQLTableAttributeName, dbTable)
+	dbSystem, dbSystemPresent := span.Attributes().Get(DbSystemAttributeName)
+	if !dbSystemPresent {
+		return false
+	}
+	dbOperation, dbOperationPresent := span.Attributes().Get(DbOperationAttributeName)
+	if !dbOperationPresent {
+		return false
+	}
+	dbTable, _ := transaction.sqlParser.ParseDbTableFromSpan(span)
+	attributes := pcommon.NewMap()
+	attributes.EnsureCapacity(10)
+	attributes.PutStr(DbOperationAttributeName, dbOperation.AsString())
+	attributes.PutStr(DbSystemAttributeName, dbSystem.AsString())
+	attributes.PutStr(DbSQLTableAttributeName, dbTable)
 
-			for _, key := range []string{"net.peer.name", "db.name"} {
-				if value, exists := span.Attributes().Get(key); exists {
-					attributes.PutStr(key, value.AsString())
-				}
-			}
-
-			timesliceName := fmt.Sprintf("Datastore/statement/%s/%s/%s", dbSystem.AsString(), dbTable, dbOperation.AsString())
-			measurement := Measurement{SpanID: span.SpanID().String(), MetricName: "apm.service.datastore.operation.duration", Span: span,
-				DurationNanos: DurationInNanos(span), Attributes: attributes, SegmentNameProvider: NewSimpleNameProvider(dbSystem.AsString()), MetricTimesliceName: timesliceName}
-
-			transaction.AddMeasurement(&measurement)
-
-			return true
+	for _, key := range []string{"net.peer.name", "db.name"} {
+		if value, exists := span.Attributes().Get(key); exists {
+			attributes.PutStr(key, value.AsString())
 		}
 	}
-	return false
+
+	timesliceName := fmt.Sprintf("Datastore/statement/%s/%s/%s", dbSystem.AsString(), dbTable, dbOperation.AsString())
+	measurement := Measurement{SpanID: span.SpanID().String(), MetricName: "apm.service.datastore.operation.duration", Span: span,
+		DurationNanos: DurationInNanos(span), Attributes: attributes, SegmentNameProvider: NewSimpleNameProvider(dbSystem.AsString()), MetricTimesliceName: timesliceName}
+
+	transaction.AddMeasurement(&measurement)
+
+	return true
 }
 
 func (transaction *Transaction) ProcessExternalSpan(span ptrace.Span) bool {

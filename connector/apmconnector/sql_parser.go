@@ -10,17 +10,17 @@ import (
 	"go.opentelemetry.io/collector/pdata/ptrace"
 )
 
+var re = regexp.MustCompile(`(?i).*?\sfrom[\s\[]+([^\]\s,)(;]*).*`)
+
 type SQLParser struct {
-	re *regexp.Regexp
 }
 
 func NewSQLParser() *SQLParser {
-	re, _ := regexp.Compile(`(?i).*?\sfrom[\s\[]+([^\]\s,)(;]*).*`)
-	return &SQLParser{re: re}
+	return &SQLParser{}
 }
 
 func (sqlParser *SQLParser) ParseDbTableFromSQL(sql string) (string, bool) {
-	matches := sqlParser.re.FindStringSubmatch(sql)
+	matches := re.FindStringSubmatch(sql)
 	count := len(matches)
 	if count < 2 {
 		return "", false
