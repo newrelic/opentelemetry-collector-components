@@ -23,7 +23,7 @@ func (ms *MetricConfig) Unmarshal(parser *confmap.Conf) error {
 	return nil
 }
 
-// MetricsConfig provides config for apm metrics.
+// MetricsConfig provides config for newrelicapm metrics.
 type MetricsConfig struct {
 	ApmServiceApdex               MetricConfig `mapstructure:"apm.service.apdex"`
 	ApmServiceErrorCount          MetricConfig `mapstructure:"apm.service.error.count"`
@@ -44,7 +44,7 @@ func DefaultMetricsConfig() MetricsConfig {
 	}
 }
 
-// MetricsBuilderConfig is a configuration for apm metrics builder.
+// MetricsBuilderConfig is a configuration for newrelicapm metrics builder.
 type MetricsBuilderConfig struct {
 	Metrics MetricsConfig `mapstructure:"metrics"`
 }

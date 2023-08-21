@@ -6,6 +6,7 @@ package apmconnector // import "apmconnector"
 //go:generate mdatagen metadata.yaml
 
 import (
+	"apmconnector/internal/metadata"
 	"context"
 
 	"go.opentelemetry.io/collector/component"
@@ -13,19 +14,13 @@ import (
 	"go.opentelemetry.io/collector/consumer"
 )
 
-const (
-	typeStr   = "apm"
-	stability = component.StabilityLevelBeta
-)
-
 // NewFactory returns a ConnectorFactory.
 func NewFactory() connector.Factory {
 	return connector.NewFactory(
-		typeStr,
+		metadata.Type,
 		createDefaultConfig,
-		connector.WithTracesToMetrics(createTracesToMetrics, stability),
-		connector.WithTracesToLogs(createTracesToLogs, stability),
-		connector.WithTracesToTraces(createTracesToTraces, stability),
+		connector.WithTracesToMetrics(createTracesToMetrics, metadata.TracesToMetricsStability),
+		connector.WithTracesToLogs(createTracesToLogs, metadata.TracesToLogsStability),
 	)
 }
 
@@ -63,22 +58,5 @@ func createTracesToLogs(
 		config:       c,
 		logsConsumer: nextConsumer,
 		logger:       set.Logger,
-	}, nil
-}
-
-// createTracesToTraces creates a traces to traces connector based on provided config.
-func createTracesToTraces(
-	_ context.Context,
-	set connector.CreateSettings,
-	cfg component.Config,
-	nextConsumer consumer.Traces,
-) (connector.Traces, error) {
-	c := cfg.(*Config)
-
-	return &ApmTraceConnector{
-		config:         c,
-		tracesConsumer: nextConsumer,
-		sqlparser:      NewSQLParser(),
-		logger:         set.Logger,
 	}, nil
 }

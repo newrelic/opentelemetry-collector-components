@@ -161,20 +161,22 @@ func (transaction *Transaction) ProcessDatabaseSpan(span ptrace.Span) bool {
 	if !dbOperationPresent {
 		return false
 	}
-	dbTable, _ := transaction.sqlParser.ParseDbTableFromSpan(span)
+	dbTable, dbTablePresent := span.Attributes().Get(DbSQLTableAttributeName)
+	if !dbTablePresent {
+		dbTable = pcommon.NewValueStr("unknown")
+	}
 	attributes := pcommon.NewMap()
 	attributes.EnsureCapacity(10)
 	attributes.PutStr(DbOperationAttributeName, dbOperation.AsString())
 	attributes.PutStr(DbSystemAttributeName, dbSystem.AsString())
-	attributes.PutStr(DbSQLTableAttributeName, dbTable)
-
+	attributes.PutStr(DbSQLTableAttributeName, dbTable.AsString())
 	for _, key := range []string{"net.peer.name", "db.name"} {
 		if value, exists := span.Attributes().Get(key); exists {
 			attributes.PutStr(key, value.AsString())
 		}
 	}
 
-	timesliceName := fmt.Sprintf("Datastore/statement/%s/%s/%s", dbSystem.AsString(), dbTable, dbOperation.AsString())
+	timesliceName := fmt.Sprintf("Datastore/statement/%s/%s/%s", dbSystem.AsString(), dbTable.AsString(), dbOperation.AsString())
 	measurement := Measurement{SpanID: span.SpanID().String(), MetricName: "apm.service.datastore.operation.duration", Span: span,
 		DurationNanos: DurationInNanos(span), Attributes: attributes, SegmentNameProvider: NewSimpleNameProvider(dbSystem.AsString()), MetricTimesliceName: timesliceName}
 
