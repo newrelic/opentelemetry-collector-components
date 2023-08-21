@@ -19,11 +19,19 @@ updates:
     schedule:
       interval: "weekly"
   - package-ecosystem: "gomod"
+    directory: "/connector/apmconnector"
+    schedule:
+      interval: "weekly"
+  - package-ecosystem: "gomod"
     directory: "/internal/common"
     schedule:
       interval: "weekly"
   - package-ecosystem: "gomod"
     directory: "/internal/tools"
+    schedule:
+      interval: "weekly"
+  - package-ecosystem: "gomod"
+    directory: "/processor/apmprocessor"
     schedule:
       interval: "weekly"
   - package-ecosystem: "gomod"
