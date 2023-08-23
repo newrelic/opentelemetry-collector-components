@@ -239,13 +239,6 @@ func (transaction *Transaction) ProcessRootSpan() bool {
 		transaction.IncrementErrorCount(transactionName, transactionType, span.EndTimestamp())
 	}
 
-	{
-		attributes := pcommon.NewMap()
-		attributes.PutStr("transactionType", transactionType.AsString())
-		attributes.PutStr("transactionName", transactionName)
-
-		transaction.resourceMetrics.RecordHistogramFromSpan("apm.service.transaction.duration", attributes, span)
-	}
 	transaction.GenerateApdexMetrics(span, err, transactionName, transactionType)
 
 	breakdownBySegment := make(map[string]int64)
@@ -271,6 +264,23 @@ func (transaction *Transaction) ProcessRootSpan() bool {
 		transaction.resourceMetrics.RecordHistogram(overviewMetricName, attributes,
 			span.StartTimestamp(), span.EndTimestamp(), sum)
 	}
+
+	{
+		attributes := pcommon.NewMap()
+		attributes.PutStr("transactionType", transactionType.AsString())
+		attributes.PutStr("transactionName", transactionName)
+		attributes.PutStr("metricTimesliceName", transactionName)
+
+		transaction.resourceMetrics.RecordHistogramFromSpan("apm.service.transaction.duration", attributes, span)
+
+		attributes.PutStr("transactionName", transactionName)
+
+		// blame any time not attributed to measurements to the transaction itself
+		transaction.resourceMetrics.RecordHistogram("apm.service.transaction.overview", attributes,
+			span.StartTimestamp(), span.EndTimestamp(), remainingNanos)
+
+	}
+
 	return true
 }
 
