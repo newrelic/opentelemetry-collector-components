@@ -1,4 +1,4 @@
-module apmprocessor
+module github.com/newrelic/opentelemetry-collector-components/processor/apmprocessor
 
 go 1.20
 

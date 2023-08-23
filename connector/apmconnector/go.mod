@@ -1,4 +1,4 @@
-module apmconnector
+module github.com/newrelic/opentelemetry-collector-components/connector/apmconnector
 
 go 1.20
 
