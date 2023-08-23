@@ -3,4 +3,4 @@
 
 //go:generate mdatagen metadata.yaml
 
-package apmprocessor // import "apmprocessor"
+package apmprocessor // import "github.com/newrelic/opentelemetry-collector-components/processor/apmprocessor"
