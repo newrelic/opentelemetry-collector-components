@@ -3,4 +3,4 @@
 
 //go:generate mdatagen metadata.yaml
 
-package apmconnector // import "apmconnector"
+package apmconnector // import "github.com/newrelic/opentelemetry-collector-components/connector/apmconnector"
