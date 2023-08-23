@@ -11,7 +11,7 @@ require (
 	github.com/pavius/impi v0.0.3
 	go.elastic.co/go-licence-detector v0.6.0
 	go.opentelemetry.io/build-tools/checkdoc v0.3.0
-	go.opentelemetry.io/build-tools/crosslink v0.3.0
+	go.opentelemetry.io/build-tools/crosslink v0.11.0
 	golang.org/x/tools v0.12.0
 )
 
@@ -187,7 +187,7 @@ require (
 	github.com/yeya24/promlinter v0.2.0 // indirect
 	github.com/ykadowak/zerologlint v0.1.3 // indirect
 	gitlab.com/bosi/decorder v0.4.0 // indirect
-	go.opentelemetry.io/build-tools v0.3.0 // indirect
+	go.opentelemetry.io/build-tools v0.11.0 // indirect
 	go.opentelemetry.io/collector/confmap v0.82.0 // indirect
 	go.opentelemetry.io/collector/featuregate v1.0.0-rcv0014 // indirect
 	go.opentelemetry.io/collector/pdata v1.0.0-rcv0014 // indirect
