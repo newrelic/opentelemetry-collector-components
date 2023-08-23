@@ -1,0 +1,8 @@
+type: newrelicapm
+
+status:
+  class: processor
+  stability:
+    development: [traces]
+  codeowners:
+    active: [jlegoff, sdaubin]

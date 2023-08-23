@@ -1,9 +1,9 @@
-type: apm
+type: newrelicapm
 
 status:
   class: connector
   stability:
-    development: [traces_to_metrics, traces_to_logs, traces_to_traces]
+    development: [traces_to_metrics, traces_to_logs]
   codeowners:
     active: [jlegoff, sdaubin]
 

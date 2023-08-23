@@ -5,7 +5,9 @@ light up the New Relic APM UI.
 
 ## Configuration
 
-This connector can act as a trace receiver and a metric, traces and logs exporter. 
+This connector can act as a trace receiver and a metric and logs exporter. It is best used
+together with the [apm processor](../../processor/apmprocessor).
+
 Here is an example configuration:
 
 ```yaml
@@ -15,6 +17,7 @@ receivers:
       grpc:
 
 processors:
+  newrelicapm:
   batch:
 
 exporters:
@@ -22,24 +25,20 @@ exporters:
     endpoint: <endpoint>
 
 connectors:
-  apm:
+  newrelicapm:
 
 service:
   pipelines:
-    traces/in:
+    traces:
       receivers: [otlp]
-      processors: [batch]
-      exporters: [apmconnector]
-    metrics/out:
-      receivers: [apmconnector]
-      processors: [batch]
-      exporters: [otlp]
-    logs/out:
-      receivers: [apmconnector]
+      processors: [newrelicapm, batch]
+      exporters: [newrelicapm, otlp]
+    metrics:
+      receivers: [newrelicapm]
       processors: [batch]
       exporters: [otlp]
-    traces/out:
-      receivers: [apmconnector]
+    logs:
+      receivers: [newrelicapm]
       processors: [batch]
       exporters: [otlp]
 ```

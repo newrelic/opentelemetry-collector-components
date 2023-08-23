@@ -13,19 +13,20 @@ import (
 	"go.opentelemetry.io/collector/consumer"
 )
 
+// FIXME copying this from the metadata/generated_status to be able to build the component externally
 const (
-	typeStr   = "apm"
-	stability = component.StabilityLevelBeta
+	Type                     = "newrelicapm"
+	TracesToMetricsStability = component.StabilityLevelDevelopment
+	TracesToLogsStability    = component.StabilityLevelDevelopment
 )
 
 // NewFactory returns a ConnectorFactory.
 func NewFactory() connector.Factory {
 	return connector.NewFactory(
-		typeStr,
+		Type,
 		createDefaultConfig,
-		connector.WithTracesToMetrics(createTracesToMetrics, stability),
-		connector.WithTracesToLogs(createTracesToLogs, stability),
-		connector.WithTracesToTraces(createTracesToTraces, stability),
+		connector.WithTracesToMetrics(createTracesToMetrics, TracesToMetricsStability),
+		connector.WithTracesToLogs(createTracesToLogs, TracesToLogsStability),
 	)
 }
 
@@ -63,22 +64,5 @@ func createTracesToLogs(
 		config:       c,
 		logsConsumer: nextConsumer,
 		logger:       set.Logger,
-	}, nil
-}
-
-// createTracesToTraces creates a traces to traces connector based on provided config.
-func createTracesToTraces(
-	_ context.Context,
-	set connector.CreateSettings,
-	cfg component.Config,
-	nextConsumer consumer.Traces,
-) (connector.Traces, error) {
-	c := cfg.(*Config)
-
-	return &ApmTraceConnector{
-		config:         c,
-		tracesConsumer: nextConsumer,
-		sqlparser:      NewSQLParser(),
-		logger:         set.Logger,
 	}, nil
 }
