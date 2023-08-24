@@ -17,6 +17,7 @@ func TestConvertOneSpanToMetrics(t *testing.T) {
 	traces := ptrace.NewTraces()
 	resourceSpans := traces.ResourceSpans().AppendEmpty()
 	resourceSpans.Resource().Attributes().PutStr("service.name", "service")
+	resourceSpans.Resource().Attributes().PutStr("instrumentation.provider", "newrelic-opentelemetry")
 	scopeSpans := resourceSpans.ScopeSpans().AppendEmpty().Spans()
 	attrs := map[string]string{
 		"attrKey": "attrValue",

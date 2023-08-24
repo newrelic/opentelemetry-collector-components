@@ -51,9 +51,7 @@ func ConvertTraces(logger *zap.Logger, config *Config, td ptrace.Traces) pmetric
 
 	for i := 0; i < td.ResourceSpans().Len(); i++ {
 		rs := td.ResourceSpans().At(i)
-		instrumentationProvider, instrumentationProviderPresent := rs.Resource().Attributes().Get("instrumentation.provider")
-		if instrumentationProviderPresent && instrumentationProvider.AsString() != "opentelemetry" {
-			logger.Debug("Skipping resource spans", zap.String("instrumentation.provider", instrumentationProvider.AsString()))
+		if !ShouldProcess(logger, rs.Resource()) {
 			continue
 		}
 

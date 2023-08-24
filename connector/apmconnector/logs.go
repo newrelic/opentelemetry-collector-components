@@ -6,13 +6,17 @@ package apmconnector // import "github.com/newrelic/opentelemetry-collector-comp
 import (
 	"go.opentelemetry.io/collector/pdata/plog"
 	"go.opentelemetry.io/collector/pdata/ptrace"
+	"go.uber.org/zap"
 )
 
-func BuildTransactions(td ptrace.Traces) plog.Logs {
+func BuildTransactions(logger *zap.Logger, td ptrace.Traces) plog.Logs {
 	logs := plog.NewLogs()
 	for i := 0; i < td.ResourceSpans().Len(); i++ {
 		resourceLogs := logs.ResourceLogs().AppendEmpty()
 		rs := td.ResourceSpans().At(i)
+		if !ShouldProcess(logger, rs.Resource()) {
+			continue
+		}
 		rs.Resource().CopyTo(resourceLogs.Resource())
 		for j := 0; j < rs.ScopeSpans().Len(); j++ {
 			scopeSpan := rs.ScopeSpans().At(j)
