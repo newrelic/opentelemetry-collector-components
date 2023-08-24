@@ -8,6 +8,8 @@ import (
 )
 
 type Config struct {
+	// If set to true, will set the `instrumentation.provider` attribute to `newrelic-opentelemetry`
+	ChangeInstrumentationProvider bool `mapstructure:"change_instrumentation_provider"`
 }
 
 var _ component.Config = (*Config)(nil)
