@@ -13,10 +13,11 @@ import (
 type spanProcessor struct {
 	sqlparser *SQLParser
 	logger    *zap.Logger
+	config    Config
 }
 
-func newSpanProcessor(_ Config, logger *zap.Logger) (*spanProcessor, error) {
-	return &spanProcessor{sqlparser: NewSQLParser(), logger: logger}, nil
+func newSpanProcessor(config Config, logger *zap.Logger) (*spanProcessor, error) {
+	return &spanProcessor{config: config, sqlparser: NewSQLParser(), logger: logger}, nil
 }
 
 func (sp *spanProcessor) processTraces(_ context.Context, td ptrace.Traces) (ptrace.Traces, error) {
@@ -27,6 +28,8 @@ func (sp *spanProcessor) processTraces(_ context.Context, td ptrace.Traces) (ptr
 			sp.logger.Debug("Skipping resource spans", zap.String("instrumentation.provider", instrumentationProvider.AsString()))
 			continue
 		}
+
+		setInstrumentationProvider(sp.config, rs.Resource())
 
 		for j := 0; j < rs.ScopeSpans().Len(); j++ {
 			scopeSpan := rs.ScopeSpans().At(j)

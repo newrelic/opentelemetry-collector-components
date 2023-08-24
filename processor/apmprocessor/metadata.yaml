@@ -3,6 +3,6 @@ type: newrelicapm
 status:
   class: processor
   stability:
-    development: [traces]
+    development: [logs, metrics, traces]
   codeowners:
     active: [jlegoff, sdaubin]
