@@ -352,7 +352,13 @@ func GetTransactionMetricName(span ptrace.Span) (string, TransactionType) {
 	if span.Kind() != ptrace.SpanKindServer {
 		return "", NullTransactionType
 	}
-
+	if rpcService, rpcServicePresent := span.Attributes().Get("rpc.service"); rpcServicePresent {
+		if rpcMethod, rpcMethodPresent := span.Attributes().Get("rpc.method"); rpcMethodPresent {
+			return fmt.Sprintf("WebTransaction/rpc/%s/%s", rpcService.AsString(), rpcMethod.AsString()), WebTransactionType
+		} else {
+			return fmt.Sprintf("WebTransaction/rpc/%s", rpcService.AsString()), WebTransactionType
+		}
+	}
 	if httpRoute, routePresent := span.Attributes().Get("http.route"); routePresent {
 		return GetWebTransactionMetricName(span, httpRoute.Str(), "http.route")
 	}

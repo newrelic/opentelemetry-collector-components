@@ -76,3 +76,24 @@ func TestGetOrCreateTransaction(t *testing.T) {
 	assert.Equal(t, transaction, existingTransaction)
 	assert.Equal(t, true, existingTransaction.IsRootSet())
 }
+
+func TestGetTransactionMetricNameRpcService(t *testing.T) {
+	span := ptrace.NewSpan()
+	span.SetKind(ptrace.SpanKindServer)
+	span.Attributes().PutStr("rpc.service", "oteldemo.CheckoutService")
+
+	name, txType := GetTransactionMetricName(span)
+	assert.Equal(t, "WebTransaction/rpc/oteldemo.CheckoutService", name)
+	assert.Equal(t, WebTransactionType, txType)
+}
+
+func TestGetTransactionMetricNameRpcServiceMethod(t *testing.T) {
+	span := ptrace.NewSpan()
+	span.SetKind(ptrace.SpanKindServer)
+	span.Attributes().PutStr("rpc.service", "oteldemo.CheckoutService")
+	span.Attributes().PutStr("rpc.method", "PlaceOrder")
+
+	name, txType := GetTransactionMetricName(span)
+	assert.Equal(t, "WebTransaction/rpc/oteldemo.CheckoutService/PlaceOrder", name)
+	assert.Equal(t, WebTransactionType, txType)
+}
