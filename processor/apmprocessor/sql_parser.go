@@ -11,8 +11,10 @@ import (
 )
 
 const (
-	DbSQLTableAttributeName = "db.sql.table"
-	DbStatement             = "db.statement"
+	DbSQLTableAttributeName  = "db.sql.table"
+	DbSystemAttributeName    = "db.system"
+	DbOperationAttributeName = "db.operation"
+	DbStatementAttributeName = "db.statement"
 )
 
 type SQLParser struct {
@@ -34,11 +36,14 @@ func (sqlParser *SQLParser) ParseDbTableFromSQL(sql string) (string, bool) {
 }
 
 func (sqlParser *SQLParser) ParseDbTableFromSpan(span ptrace.Span) (string, bool) {
-	dbTable, dbTablePresent := span.Attributes().Get(DbSQLTableAttributeName)
-	if dbTablePresent {
+	if dbTable, dbTablePresent := span.Attributes().Get(DbSQLTableAttributeName); dbTablePresent {
 		return dbTable.AsString(), false
 	}
-	if sql, sqlPresent := span.Attributes().Get(DbStatement); sqlPresent {
+	if dbSystem, dbSystemPresent := span.Attributes().Get(DbSystemAttributeName); dbSystemPresent && dbSystem.AsString() == "redis" {
+		// there is no table name for redis
+		return "none", true
+	}
+	if sql, sqlPresent := span.Attributes().Get(DbStatementAttributeName); sqlPresent {
 		if parsedTable, exists := sqlParser.ParseDbTableFromSQL(sql.AsString()); exists {
 			return parsedTable, true
 		}

@@ -34,6 +34,11 @@ func (sp *spanProcessor) processTraces(_ context.Context, td ptrace.Traces) (ptr
 				span := scopeSpan.Spans().At(k)
 				if parsedTable, parsed := sp.sqlparser.ParseDbTableFromSpan(span); parsed {
 					span.Attributes().PutStr(DbSQLTableAttributeName, parsedTable)
+					if dbSystem, dbSystemPresent := span.Attributes().Get(DbSystemAttributeName); dbSystemPresent && dbSystem.AsString() == "redis" {
+						if _, dbOperationPresent := span.Attributes().Get(DbOperationAttributeName); !dbOperationPresent {
+							span.Attributes().PutStr(DbOperationAttributeName, span.Name())
+						}
+					}
 				}
 			}
 		}

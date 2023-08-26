@@ -160,11 +160,7 @@ func (transaction *Transaction) ProcessDatabaseSpan(span ptrace.Span) bool {
 	}
 	dbOperation, dbOperationPresent := span.Attributes().Get(DbOperationAttributeName)
 	if !dbOperationPresent {
-		if dbSystem.AsString() == "redis" {
-			dbOperation = pcommon.NewValueStr(span.Name())
-		} else {
-			return false
-		}
+		return false
 	}
 	dbTable, dbTablePresent := span.Attributes().Get(DbSQLTableAttributeName)
 	if !dbTablePresent {
