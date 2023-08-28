@@ -31,7 +31,7 @@ func TestGetTransactionMetricNameUnknown(t *testing.T) {
 	assert.Equal(t, "Web", txType.AsString())
 }
 
-func TestGetTransactionMetricNamRoute(t *testing.T) {
+func TestGetTransactionMetricNameRoute(t *testing.T) {
 	span := ptrace.NewSpan()
 	span.SetKind(ptrace.SpanKindServer)
 	span.Attributes().PutStr("http.route", "/users")
@@ -41,10 +41,20 @@ func TestGetTransactionMetricNamRoute(t *testing.T) {
 	assert.Equal(t, WebTransactionType, txType)
 }
 
-func TestGetTransactionMetricNamUrlPath(t *testing.T) {
+func TestGetTransactionMetricNameUrlPath(t *testing.T) {
 	span := ptrace.NewSpan()
 	span.SetKind(ptrace.SpanKindServer)
 	span.Attributes().PutStr("url.path", "/owners/5")
+
+	name, txType := GetTransactionMetricName(span)
+	assert.Equal(t, "WebTransaction/Uri/owners/5", name)
+	assert.Equal(t, WebTransactionType, txType)
+}
+
+func TestGetTransactionMetricNameHttpTarget(t *testing.T) {
+	span := ptrace.NewSpan()
+	span.SetKind(ptrace.SpanKindServer)
+	span.Attributes().PutStr("http.target", "/owners/5")
 
 	name, txType := GetTransactionMetricName(span)
 	assert.Equal(t, "WebTransaction/Uri/owners/5", name)
@@ -65,4 +75,25 @@ func TestGetOrCreateTransaction(t *testing.T) {
 	existingTransaction, _ := transactions.GetOrCreateTransaction("java", span, metrics)
 	assert.Equal(t, transaction, existingTransaction)
 	assert.Equal(t, true, existingTransaction.IsRootSet())
+}
+
+func TestGetTransactionMetricNameRpcService(t *testing.T) {
+	span := ptrace.NewSpan()
+	span.SetKind(ptrace.SpanKindServer)
+	span.Attributes().PutStr("rpc.service", "oteldemo.CheckoutService")
+
+	name, txType := GetTransactionMetricName(span)
+	assert.Equal(t, "WebTransaction/rpc/oteldemo.CheckoutService", name)
+	assert.Equal(t, WebTransactionType, txType)
+}
+
+func TestGetTransactionMetricNameRpcServiceMethod(t *testing.T) {
+	span := ptrace.NewSpan()
+	span.SetKind(ptrace.SpanKindServer)
+	span.Attributes().PutStr("rpc.service", "oteldemo.CheckoutService")
+	span.Attributes().PutStr("rpc.method", "PlaceOrder")
+
+	name, txType := GetTransactionMetricName(span)
+	assert.Equal(t, "WebTransaction/rpc/oteldemo.CheckoutService/PlaceOrder", name)
+	assert.Equal(t, WebTransactionType, txType)
 }

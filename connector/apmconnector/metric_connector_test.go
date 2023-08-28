@@ -29,12 +29,13 @@ func TestConvertOneSpanToMetrics(t *testing.T) {
 	logger, _ := zap.NewDevelopment()
 	config := Config{ApdexT: 0.5}
 	metrics := ConvertTraces(logger, &config, traces)
-	assert.Equal(t, 4, metrics.MetricCount())
+	assert.Equal(t, 5, metrics.MetricCount())
 	rm := metrics.ResourceMetrics().At(0)
 	serviceName, _ := rm.Resource().Attributes().Get("service.name")
 	assert.Equal(t, "service", serviceName.AsString())
 	sm := rm.ScopeMetrics().At(0)
-	metric := sm.Metrics().At(0)
+	// FIXME this is brittle, throw in a map
+	metric := sm.Metrics().At(3)
 	assert.Equal(t, "apm.service.transaction.duration", metric.Name())
 	dp := metric.Histogram().DataPoints().At(0)
 	assert.Equal(t, 1.0, dp.Sum())

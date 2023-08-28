@@ -135,11 +135,12 @@ func (transaction *Transaction) AddSpan(span ptrace.Span) {
 	if span.Kind() == ptrace.SpanKindClient {
 		// filter out db calls that have no parent (so no transaction)
 		if !isRoot {
-			transaction.ProcessClientSpan(span)
+			if transaction.ProcessClientSpan(span) {
+				return
+			}
 		}
-	} else {
-		transaction.ProcessGenericSpan(span)
 	}
+	transaction.ProcessGenericSpan(span)
 }
 
 func NewSimpleNameProvider(name string) func(TransactionType) string {
@@ -186,8 +187,11 @@ func (transaction *Transaction) ProcessDatabaseSpan(span ptrace.Span) bool {
 }
 
 func (transaction *Transaction) ProcessExternalSpan(span ptrace.Span) bool {
-	if serverAddress, serverAddressPresent := span.Attributes().Get("server.address"); serverAddressPresent {
+	serverAddress, serverAddressKey := GetFirst(span.Attributes(), []string{"server.address", "net.peer.name"})
+	if serverAddressKey != "" {
 		attributes := pcommon.NewMap()
+		attributes.PutStr("server.address", serverAddress.AsString())
+		// FIXME remove after UI is updated
 		attributes.PutStr("external.host", serverAddress.AsString())
 
 		segmentNameProvider := func(t TransactionType) string {
@@ -239,13 +243,6 @@ func (transaction *Transaction) ProcessRootSpan() bool {
 		transaction.IncrementErrorCount(transactionName, transactionType, span.EndTimestamp())
 	}
 
-	{
-		attributes := pcommon.NewMap()
-		attributes.PutStr("transactionType", transactionType.AsString())
-		attributes.PutStr("transactionName", transactionName)
-
-		transaction.resourceMetrics.RecordHistogramFromSpan("apm.service.transaction.duration", attributes, span)
-	}
 	transaction.GenerateApdexMetrics(span, err, transactionName, transactionType)
 
 	breakdownBySegment := make(map[string]int64)
@@ -271,6 +268,23 @@ func (transaction *Transaction) ProcessRootSpan() bool {
 		transaction.resourceMetrics.RecordHistogram(overviewMetricName, attributes,
 			span.StartTimestamp(), span.EndTimestamp(), sum)
 	}
+
+	{
+		attributes := pcommon.NewMap()
+		attributes.PutStr("transactionType", transactionType.AsString())
+		attributes.PutStr("transactionName", transactionName)
+		attributes.PutStr("metricTimesliceName", transactionName)
+
+		transaction.resourceMetrics.RecordHistogramFromSpan("apm.service.transaction.duration", attributes, span)
+
+		attributes.PutStr("transactionName", transactionName)
+
+		// blame any time not attributed to measurements to the transaction itself
+		transaction.resourceMetrics.RecordHistogram("apm.service.transaction.overview", attributes,
+			span.StartTimestamp(), span.EndTimestamp(), remainingNanos)
+
+	}
+
 	return true
 }
 
@@ -338,12 +352,21 @@ func GetTransactionMetricName(span ptrace.Span) (string, TransactionType) {
 	if span.Kind() != ptrace.SpanKindServer {
 		return "", NullTransactionType
 	}
-
+	if rpcService, rpcServicePresent := span.Attributes().Get("rpc.service"); rpcServicePresent {
+		if rpcMethod, rpcMethodPresent := span.Attributes().Get("rpc.method"); rpcMethodPresent {
+			return fmt.Sprintf("WebTransaction/rpc/%s/%s", rpcService.AsString(), rpcMethod.AsString()), WebTransactionType
+		} else {
+			return fmt.Sprintf("WebTransaction/rpc/%s", rpcService.AsString()), WebTransactionType
+		}
+	}
 	if httpRoute, routePresent := span.Attributes().Get("http.route"); routePresent {
 		return GetWebTransactionMetricName(span, httpRoute.Str(), "http.route")
 	}
-	if urlPath, urlPathPresent := span.Attributes().Get("url.path"); urlPathPresent {
+	if urlPath, _ := GetFirst(span.Attributes(), []string{"url.path", "http.target"}); urlPath.Type() != pcommon.ValueTypeEmpty {
 		return GetWebTransactionMetricName(span, urlPath.Str(), "Uri")
+	}
+	if method, methodPresent := span.Attributes().Get("http.method"); methodPresent {
+		return fmt.Sprintf("WebTransaction/http.method/%s", method.Str()), WebTransactionType
 	}
 	return "WebTransaction/Other/unknown", WebTransactionType
 }
@@ -353,6 +376,15 @@ func GetWebTransactionMetricName(span ptrace.Span, name, nameType string) (strin
 		return fmt.Sprintf("WebTransaction/%s%s (%s)", nameType, name, method.Str()), WebTransactionType
 	}
 	return fmt.Sprintf("WebTransaction/%s%s", nameType, name), WebTransactionType
+}
+
+func GetFirst(attributes pcommon.Map, keys []string) (pcommon.Value, string) {
+	for _, key := range keys {
+		if value, exists := attributes.Get(key); exists {
+			return value, key
+		}
+	}
+	return pcommon.NewValueEmpty(), ""
 }
 
 func GetSdkLanguage(attributes pcommon.Map) string {
