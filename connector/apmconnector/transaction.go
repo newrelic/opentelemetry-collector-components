@@ -5,6 +5,7 @@ package apmconnector // import "github.com/newrelic/opentelemetry-collector-comp
 
 import (
 	"fmt"
+	"strings"
 
 	"go.opentelemetry.io/collector/pdata/pcommon"
 	"go.opentelemetry.io/collector/pdata/ptrace"
@@ -92,13 +93,27 @@ func (transactions *TransactionsMap) ProcessTransactions() {
 	}
 }
 
-func (transactions *TransactionsMap) GetOrCreateTransaction(sdkLanguage string, span ptrace.Span, resourceMetrics *ResourceMetrics) (*Transaction, string) {
+func GetTransactionKey(traceID string, resourceAttributes pcommon.Map) string {
+	keys := []string{"host.name", "service.name", "container.id", "telemetry.sdk.language"}
+	values := []string{}
+	for _, key := range keys {
+		if value, exists := resourceAttributes.Get(key); exists {
+			values = append(values, value.AsString())
+		} else {
+			values = append(values, "")
+		}
+	}
+	return strings.Join(values[:], ":")
+}
+
+func (transactions *TransactionsMap) GetOrCreateTransaction(sdkLanguage string, span ptrace.Span, resourceMetrics *ResourceMetrics, resourceAttributes pcommon.Map) (*Transaction, string) {
 	traceID := span.TraceID().String()
-	transaction, txExists := transactions.Transactions[traceID]
+	key := GetTransactionKey(traceID, resourceAttributes)
+	transaction, txExists := transactions.Transactions[key]
 	if !txExists {
 		transaction = &Transaction{SdkLanguage: sdkLanguage, SpanToChildDuration: make(map[string]int64),
 			resourceMetrics: resourceMetrics, Measurements: make(map[string]*Measurement), sqlParser: transactions.sqlParser, apdex: transactions.apdex}
-		transactions.Transactions[traceID] = transaction
+		transactions.Transactions[key] = transaction
 		//fmt.Printf("Created transaction for: %s   %s\n", traceID, transaction.sdkLanguage)
 	}
 

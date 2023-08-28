@@ -66,13 +66,13 @@ func TestGetOrCreateTransaction(t *testing.T) {
 	span := ptrace.NewSpan()
 	meterProvider := NewMeterProvider()
 	metrics := meterProvider.getOrCreateResourceMetrics(pcommon.NewMap())
-	transaction, _ := transactions.GetOrCreateTransaction("java", span, metrics)
+	transaction, _ := transactions.GetOrCreateTransaction("java", span, metrics, pcommon.NewMap())
 
 	transaction.SetRootSpan(span)
 	assert.Equal(t, true, transaction.IsRootSet())
 	transactions.ProcessTransactions()
 
-	existingTransaction, _ := transactions.GetOrCreateTransaction("java", span, metrics)
+	existingTransaction, _ := transactions.GetOrCreateTransaction("java", span, metrics, pcommon.NewMap())
 	assert.Equal(t, transaction, existingTransaction)
 	assert.Equal(t, true, existingTransaction.IsRootSet())
 }
