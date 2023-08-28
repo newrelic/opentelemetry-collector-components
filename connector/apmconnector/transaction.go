@@ -103,6 +103,7 @@ func GetTransactionKey(traceID string, resourceAttributes pcommon.Map) string {
 			values = append(values, "")
 		}
 	}
+	values = append(values, traceID)
 	return strings.Join(values[:], ":")
 }
 
