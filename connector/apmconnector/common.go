@@ -11,7 +11,7 @@ import (
 func ShouldProcess(logger *zap.Logger, rs pcommon.Resource) bool {
 	instrumentationProvider, instrumentationProviderPresent := rs.Attributes().Get("instrumentation.provider")
 	if !instrumentationProviderPresent || instrumentationProvider.AsString() != "newrelic-opentelemetry" {
-		logger.Debug("Skipping resource spans", zap.String("instrumentation.provider", instrumentationProvider.AsString()))
+		logger.Debug("Skipping resource spans")
 		return false
 	}
 	return true
