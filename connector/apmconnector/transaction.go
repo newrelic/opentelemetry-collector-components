@@ -62,7 +62,6 @@ type Transaction struct {
 	SpanToChildDuration map[string]int64
 	resourceMetrics     *ResourceMetrics
 	Measurements        map[string]*Measurement
-	sqlParser           *SQLParser
 	apdex               Apdex
 	RootSpan            ptrace.Span
 }
@@ -77,13 +76,12 @@ type Measurement struct {
 }
 
 type TransactionsMap struct {
-	sqlParser    *SQLParser
 	apdex        Apdex
 	Transactions map[string]*Transaction
 }
 
 func NewTransactionsMap(apdexT float64) *TransactionsMap {
-	return &TransactionsMap{Transactions: make(map[string]*Transaction), sqlParser: NewSQLParser(), apdex: NewApdex(apdexT)}
+	return &TransactionsMap{Transactions: make(map[string]*Transaction), apdex: NewApdex(apdexT)}
 }
 
 func (transactions *TransactionsMap) ProcessTransactions() {
@@ -113,7 +111,7 @@ func (transactions *TransactionsMap) GetOrCreateTransaction(sdkLanguage string, 
 	transaction, txExists := transactions.Transactions[key]
 	if !txExists {
 		transaction = &Transaction{SdkLanguage: sdkLanguage, SpanToChildDuration: make(map[string]int64),
-			resourceMetrics: resourceMetrics, Measurements: make(map[string]*Measurement), sqlParser: transactions.sqlParser, apdex: transactions.apdex}
+			resourceMetrics: resourceMetrics, Measurements: make(map[string]*Measurement), apdex: transactions.apdex}
 		transactions.Transactions[key] = transaction
 		//fmt.Printf("Created transaction for: %s   %s\n", traceID, transaction.sdkLanguage)
 	}
@@ -381,9 +379,8 @@ func GetTransactionMetricName(span ptrace.Span) (string, TransactionType) {
 	if rpcService, rpcServicePresent := span.Attributes().Get("rpc.service"); rpcServicePresent {
 		if rpcMethod, rpcMethodPresent := span.Attributes().Get("rpc.method"); rpcMethodPresent {
 			return fmt.Sprintf("WebTransaction/rpc/%s/%s", rpcService.AsString(), rpcMethod.AsString()), WebTransactionType
-		} else {
-			return fmt.Sprintf("WebTransaction/rpc/%s", rpcService.AsString()), WebTransactionType
 		}
+		return fmt.Sprintf("WebTransaction/rpc/%s", rpcService.AsString()), WebTransactionType
 	}
 	if httpRoute, routePresent := span.Attributes().Get("http.route"); routePresent {
 		return GetWebTransactionMetricName(span, httpRoute.Str(), "http.route")

@@ -7,6 +7,8 @@ import (
 )
 
 const (
-	Type            = "newrelicapm"
-	TracesStability = component.StabilityLevelDevelopment
+	Type             = "newrelicapm"
+	LogsStability    = component.StabilityLevelDevelopment
+	MetricsStability = component.StabilityLevelDevelopment
+	TracesStability  = component.StabilityLevelDevelopment
 )
