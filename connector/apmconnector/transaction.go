@@ -94,7 +94,7 @@ func (transactions *TransactionsMap) ProcessTransactions() {
 }
 
 func GetTransactionKey(traceID string, resourceAttributes pcommon.Map) string {
-	keys := []string{"host.name", "service.name", "container.id", "telemetry.sdk.language"}
+	keys := []string{"host.name", "service.namespace", "service.name", "telemetry.sdk.language", "container.id", "service.instance.id"}
 	values := []string{}
 	for _, key := range keys {
 		if value, exists := resourceAttributes.Get(key); exists {
@@ -125,8 +125,15 @@ func (transaction *Transaction) IsRootSet() bool {
 	return (ptrace.Span{}) != transaction.RootSpan
 }
 
-func (transaction *Transaction) SetRootSpan(span ptrace.Span) {
+func (transaction *Transaction) SetRootSpan(span ptrace.Span) bool {
+	// favor server span
+	if transaction.IsRootSet() && (transaction.RootSpan.Kind() == ptrace.SpanKindServer ||
+		transaction.RootSpan.Kind() == ptrace.SpanKindConsumer ||
+		transaction.RootSpan.Kind() == ptrace.SpanKindProducer) {
+		return false
+	}
 	transaction.RootSpan = span
+	return true
 }
 
 func (transaction *Transaction) AddSpan(span ptrace.Span) {
@@ -134,10 +141,8 @@ func (transaction *Transaction) AddSpan(span ptrace.Span) {
 		transaction.SetRootSpan(span)
 		return
 	}
-	isRoot := span.ParentSpanID().IsEmpty()
-	if isRoot {
-		transaction.SetRootSpan(span)
-	} else {
+	isRoot := span.ParentSpanID().IsEmpty() && transaction.SetRootSpan(span)
+	if !isRoot {
 		parentSpanID := span.ParentSpanID().String()
 		newDuration := DurationInNanos(span)
 
@@ -166,6 +171,10 @@ func NewSimpleNameProvider(name string) func(TransactionType) string {
 func (transaction *Transaction) AddMeasurement(measurement *Measurement) {
 	transaction.Measurements[measurement.SpanID] = measurement
 	measurement.ExclusiveDurationNanos = measurement.ExclusiveTime(transaction)
+	if measurement.ExclusiveDurationNanos < 0 {
+		// FIXME log this
+		measurement.ExclusiveDurationNanos = 0
+	}
 	measurement.Attributes.PutStr("metricTimesliceName", measurement.MetricTimesliceName)
 }
 
@@ -293,12 +302,13 @@ func (transaction *Transaction) ProcessRootSpan() bool {
 
 		transaction.resourceMetrics.RecordHistogramFromSpan("apm.service.transaction.duration", attributes, span)
 
-		attributes.PutStr("transactionName", transactionName)
+		if remainingNanos > 0 {
+			attributes.PutStr("transactionName", transactionName)
 
-		// blame any time not attributed to measurements to the transaction itself
-		transaction.resourceMetrics.RecordHistogram("apm.service.transaction.overview", attributes,
-			span.StartTimestamp(), span.EndTimestamp(), remainingNanos)
-
+			// blame any time not attributed to measurements to the transaction itself
+			transaction.resourceMetrics.RecordHistogram("apm.service.transaction.overview", attributes,
+				span.StartTimestamp(), span.EndTimestamp(), remainingNanos)
+		}
 	}
 
 	return true
