@@ -65,16 +65,57 @@ func TestGetOrCreateTransaction(t *testing.T) {
 	transactions := NewTransactionsMap(0.5)
 	span := ptrace.NewSpan()
 	meterProvider := NewMeterProvider()
-	metrics := meterProvider.getOrCreateResourceMetrics(pcommon.NewMap())
-	transaction, _ := transactions.GetOrCreateTransaction("java", span, metrics)
+	resources := pcommon.NewMap()
+	metrics := meterProvider.getOrCreateResourceMetrics(resources)
+	transaction, _ := transactions.GetOrCreateTransaction("java", span, metrics, resources)
 
 	transaction.SetRootSpan(span)
 	assert.Equal(t, true, transaction.IsRootSet())
 	transactions.ProcessTransactions()
 
-	existingTransaction, _ := transactions.GetOrCreateTransaction("java", span, metrics)
-	assert.Equal(t, transaction, existingTransaction)
+	existingTransaction, _ := transactions.GetOrCreateTransaction("java", span, metrics, resources)
+	assert.Same(t, transaction, existingTransaction)
 	assert.Equal(t, true, existingTransaction.IsRootSet())
+}
+
+func TestGetOrCreateTransactionMultipleSpans(t *testing.T) {
+	transactions := NewTransactionsMap(0.5)
+	span := ptrace.NewSpan()
+	span.SetTraceID(pcommon.TraceID{0x01})
+	span.SetSpanID(pcommon.SpanID{0x01})
+	meterProvider := NewMeterProvider()
+	resources := pcommon.NewMap()
+	resources.PutStr("service.name", "authentication")
+	metrics := meterProvider.getOrCreateResourceMetrics(resources)
+	transaction, _ := transactions.GetOrCreateTransaction("java", span, metrics, resources)
+
+	span = ptrace.NewSpan()
+	span.SetTraceID(pcommon.TraceID{0x01})
+	span.SetSpanID(pcommon.SpanID{0x02})
+
+	existingTransaction, _ := transactions.GetOrCreateTransaction("java", span, metrics, resources)
+	assert.Same(t, transaction, existingTransaction)
+}
+
+func TestGetOrCreateTransactionMultipleServices(t *testing.T) {
+	transactions := NewTransactionsMap(0.5)
+	span := ptrace.NewSpan()
+	span.SetTraceID(pcommon.TraceID{0x01})
+	span.SetSpanID(pcommon.SpanID{0x01})
+	meterProvider := NewMeterProvider()
+	resources := pcommon.NewMap()
+	resources.PutStr("service.name", "authentication")
+	metrics := meterProvider.getOrCreateResourceMetrics(resources)
+	transaction, _ := transactions.GetOrCreateTransaction("java", span, metrics, resources)
+
+	span = ptrace.NewSpan()
+	span.SetTraceID(pcommon.TraceID{0x01})
+	span.SetSpanID(pcommon.SpanID{0x02})
+
+	resources.PutStr("service.name", "cart")
+
+	existingTransaction, _ := transactions.GetOrCreateTransaction("java", span, metrics, resources)
+	assert.NotSame(t, transaction, existingTransaction)
 }
 
 func TestGetTransactionMetricNameRpcService(t *testing.T) {
