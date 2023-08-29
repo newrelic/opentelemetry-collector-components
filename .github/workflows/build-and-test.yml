@@ -47,6 +47,7 @@ jobs:
           - receiver
           - processor
           - exporter
+          - connector
           - extension
           - internal
           # - other
@@ -150,6 +151,7 @@ jobs:
             - receiver
             - processor
             - exporter
+            - connector
             - extension
             - internal
             - other
