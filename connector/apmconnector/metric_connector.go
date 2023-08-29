@@ -72,7 +72,7 @@ func ConvertTraces(logger *zap.Logger, config *Config, td ptrace.Traces) pmetric
 					}
 				}
 
-				transaction, _ := transactions.GetOrCreateTransaction(sdkLanguage, span, resourceMetrics)
+				transaction, _ := transactions.GetOrCreateTransaction(sdkLanguage, span, resourceMetrics, rs.Resource().Attributes())
 
 				transaction.AddSpan(span)
 			}
