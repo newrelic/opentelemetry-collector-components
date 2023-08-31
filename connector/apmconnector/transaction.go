@@ -47,7 +47,7 @@ func NewApdex(apdexT float64) Apdex {
 	return Apdex{apdexSatisfying: apdexT, apdexTolerating: apdexT * 4}
 }
 
-func (apdex Apdex) GetApdexBucket(durationInSeconds float64) string {
+func (apdex Apdex) GetApdexZone(durationInSeconds float64) string {
 	if durationInSeconds <= apdex.apdexSatisfying {
 		return "S"
 	} else if durationInSeconds <= apdex.apdexTolerating {
@@ -317,10 +317,10 @@ func (transaction *Transaction) GenerateApdexMetrics(span ptrace.Span, err bool,
 	attributes.PutDouble("apdex.value", transaction.apdex.apdexSatisfying)
 	attributes.PutStr("transactionType", transactionType.AsString())
 	if err {
-		attributes.PutStr("apdex.bucket", "F")
+		attributes.PutStr("apdex.zone", "F")
 	} else {
 		durationSeconds := NanosToSeconds(DurationInNanos(span))
-		attributes.PutStr("apdex.bucket", transaction.apdex.GetApdexBucket(durationSeconds))
+		attributes.PutStr("apdex.zone", transaction.apdex.GetApdexZone(durationSeconds))
 	}
 	transaction.resourceMetrics.IncrementSum("apm.service.apdex", attributes, span.EndTimestamp())
 

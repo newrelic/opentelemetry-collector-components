@@ -13,12 +13,12 @@ import (
 
 func TestApdex(t *testing.T) {
 	apdex := NewApdex(0.5)
-	assert.Equal(t, "S", apdex.GetApdexBucket(0.1))
-	assert.Equal(t, "S", apdex.GetApdexBucket(0.5))
-	assert.Equal(t, "T", apdex.GetApdexBucket(0.51))
-	assert.Equal(t, "T", apdex.GetApdexBucket(1.1))
-	assert.Equal(t, "T", apdex.GetApdexBucket(2.0))
-	assert.Equal(t, "F", apdex.GetApdexBucket(2.1))
+	assert.Equal(t, "S", apdex.GetApdexZone(0.1))
+	assert.Equal(t, "S", apdex.GetApdexZone(0.5))
+	assert.Equal(t, "T", apdex.GetApdexZone(0.51))
+	assert.Equal(t, "T", apdex.GetApdexZone(1.1))
+	assert.Equal(t, "T", apdex.GetApdexZone(2.0))
+	assert.Equal(t, "F", apdex.GetApdexZone(2.1))
 }
 
 func TestGetTransactionMetricNameUnknown(t *testing.T) {
