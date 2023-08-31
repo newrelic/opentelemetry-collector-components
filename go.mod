@@ -258,3 +258,7 @@ replace github.com/cloudflare/cloudflare-go => github.com/cyriltovena/cloudflare
 replace github.com/go-kit/log => github.com/dannykopping/go-kit-log v0.2.2-0.20221002180827-5591c1641b6b
 
 replace github.com/newrelic/opentelemetry-collector-components/receiver/nopreceiver => ./receiver/nopreceiver
+
+replace github.com/newrelic/opentelemetry-collector-components/processor/apmprocessor => ./processor/apmprocessor
+
+replace github.com/newrelic/opentelemetry-collector-components/connector/apmconnector => ./connector/apmconnector
