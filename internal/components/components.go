@@ -4,7 +4,10 @@
 package components // import "github.com/newrelic/opentelemetry-collector-components/internal/components"
 
 import (
+	"github.com/newrelic/opentelemetry-collector-components/connector/apmconnector"
+	"github.com/newrelic/opentelemetry-collector-components/processor/apmprocessor"
 	"github.com/newrelic/opentelemetry-collector-components/receiver/nopreceiver"
+	"go.opentelemetry.io/collector/connector"
 	"go.opentelemetry.io/collector/exporter"
 	"go.opentelemetry.io/collector/exporter/otlpexporter"
 	"go.opentelemetry.io/collector/extension"
@@ -52,8 +55,17 @@ func Components() (otelcol.Factories, error) {
 
 	processors := []processor.Factory{
 		batchprocessor.NewFactory(),
+		apmprocessor.NewFactory(),
 	}
 	factories.Processors, err = processor.MakeFactoryMap(processors...)
+	if err != nil {
+		return otelcol.Factories{}, err
+	}
+
+	connectors := []connector.Factory{
+		apmconnector.NewFactory(),
+	}
+	factories.Connectors, err = connector.MakeFactoryMap(connectors...)
 	if err != nil {
 		return otelcol.Factories{}, err
 	}

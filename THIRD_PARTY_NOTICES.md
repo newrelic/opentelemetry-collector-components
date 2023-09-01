@@ -21,6 +21,22 @@ t/.
 
 
 
+## [github.com/newrelic/opentelemetry-collector-components/connector/apmconnector](https://github.com/newrelic/opentelemetry-collector-components)
+
+Distributed under the following license(s):
+
+* Apache-2.0
+
+
+
+## [github.com/newrelic/opentelemetry-collector-components/processor/apmprocessor](https://github.com/newrelic/opentelemetry-collector-components)
+
+Distributed under the following license(s):
+
+* Apache-2.0
+
+
+
 ## [github.com/newrelic/opentelemetry-collector-components/receiver/nopreceiver](https://github.com/newrelic/opentelemetry-collector-components)
 
 Distributed under the following license(s):
@@ -78,6 +94,14 @@ Distributed under the following license(s):
 
 
 ## [go.opentelemetry.io/collector/component](https://go.opentelemetry.io/collector/component)
+
+Distributed under the following license(s):
+
+* Apache-2.0
+
+
+
+## [go.opentelemetry.io/collector/connector](https://go.opentelemetry.io/collector/connector)
 
 Distributed under the following license(s):
 
