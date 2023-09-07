@@ -263,7 +263,7 @@ func (transaction *Transaction) ProcessRootSpan() bool {
 
 	err := span.Status().Code() == ptrace.StatusCodeError
 	if err {
-		transaction.IncrementErrorCount(transactionName, transactionType, span.EndTimestamp())
+		transaction.IncrementErrorCount(transactionName, transactionType, span.StartTimestamp(), span.EndTimestamp())
 	}
 
 	transaction.GenerateApdexMetrics(span, err, transactionName, transactionType)
@@ -283,13 +283,10 @@ func (transaction *Transaction) ProcessRootSpan() bool {
 	}
 
 	overviewMetricName := transactionType.GetOverviewMetricName()
-
 	for segment, sum := range breakdownBySegment {
 		attributes := pcommon.NewMap()
 		attributes.PutStr("segmentName", segment)
-
-		transaction.resourceMetrics.RecordHistogram(overviewMetricName, attributes,
-			span.StartTimestamp(), span.EndTimestamp(), sum)
+		transaction.resourceMetrics.AddHistogram(overviewMetricName, attributes, span.StartTimestamp(), span.EndTimestamp(), sum)
 	}
 
 	{
@@ -298,14 +295,13 @@ func (transaction *Transaction) ProcessRootSpan() bool {
 		attributes.PutStr("transactionName", transactionName)
 		attributes.PutStr("metricTimesliceName", transactionName)
 
-		transaction.resourceMetrics.RecordHistogramFromSpan("apm.service.transaction.duration", attributes, span)
+		transaction.resourceMetrics.AddHistogramFromSpan("apm.service.transaction.duration", attributes, span)
 
 		if remainingNanos > 0 {
+			// FIXME this is already in the map
 			attributes.PutStr("transactionName", transactionName)
-
 			// blame any time not attributed to measurements to the transaction itself
-			transaction.resourceMetrics.RecordHistogram("apm.service.transaction.overview", attributes,
-				span.StartTimestamp(), span.EndTimestamp(), remainingNanos)
+			transaction.resourceMetrics.AddHistogram("apm.service.transaction.overview", attributes, span.StartTimestamp(), span.EndTimestamp(), remainingNanos)
 		}
 	}
 
@@ -322,25 +318,25 @@ func (transaction *Transaction) GenerateApdexMetrics(span ptrace.Span, err bool,
 		durationSeconds := NanosToSeconds(DurationInNanos(span))
 		attributes.PutStr("apdex.zone", transaction.apdex.GetApdexZone(durationSeconds))
 	}
-	transaction.resourceMetrics.IncrementSum("apm.service.apdex", attributes, span.EndTimestamp())
+	transaction.resourceMetrics.IncrementSum("apm.service.apdex", attributes, span.StartTimestamp(), span.EndTimestamp())
 
 	txAttributes := pcommon.NewMap()
 	attributes.CopyTo(txAttributes)
 	txAttributes.PutStr("transactionName", transactionName)
-	transaction.resourceMetrics.IncrementSum("apm.service.transaction.apdex", txAttributes, span.EndTimestamp())
+	transaction.resourceMetrics.IncrementSum("apm.service.transaction.apdex", txAttributes, span.StartTimestamp(), span.EndTimestamp())
 }
 
-func (transaction *Transaction) IncrementErrorCount(transactionName string, transactionType TransactionType, timestamp pcommon.Timestamp) {
+func (transaction *Transaction) IncrementErrorCount(transactionName string, transactionType TransactionType, startTimestamp pcommon.Timestamp, endTimestamp pcommon.Timestamp) {
 	{
 		attributes := pcommon.NewMap()
 		attributes.PutStr("transactionType", transactionType.AsString())
-		transaction.resourceMetrics.IncrementSum("apm.service.error.count", attributes, timestamp)
+		transaction.resourceMetrics.IncrementSum("apm.service.error.count", attributes, startTimestamp, endTimestamp)
 	}
 	{
 		attributes := pcommon.NewMap()
 		attributes.PutStr("transactionName", transactionName)
 		attributes.PutStr("transactionType", transactionType.AsString())
-		transaction.resourceMetrics.IncrementSum("apm.service.transaction.error.count", attributes, timestamp)
+		transaction.resourceMetrics.IncrementSum("apm.service.transaction.error.count", attributes, startTimestamp, endTimestamp)
 	}
 }
 
@@ -348,7 +344,7 @@ func (transaction *Transaction) ProcessMeasurement(measurement *Measurement, tra
 	measurement.Attributes.PutStr("transactionType", transactionType.AsString())
 	measurement.Attributes.PutStr("scope", transactionName)
 
-	transaction.resourceMetrics.RecordHistogramFromSpan(measurement.MetricName, measurement.Attributes, measurement.Span)
+	transaction.resourceMetrics.AddHistogramFromSpan(measurement.MetricName, measurement.Attributes, measurement.Span)
 
 	{
 		attributes := pcommon.NewMap()
@@ -356,7 +352,7 @@ func (transaction *Transaction) ProcessMeasurement(measurement *Measurement, tra
 		// we might not need transactionName here..
 		attributes.PutStr("transactionName", transactionName)
 
-		transaction.resourceMetrics.RecordHistogram("apm.service.transaction.overview", attributes,
+		transaction.resourceMetrics.AddHistogram("apm.service.transaction.overview", attributes,
 			measurement.Span.StartTimestamp(), measurement.Span.EndTimestamp(), measurement.ExclusiveDurationNanos)
 	}
 }
@@ -419,9 +415,9 @@ func GetSdkLanguage(attributes pcommon.Map) string {
 }
 
 // Generate the metrc used for the host instances drop down
-func GenerateInstanceMetric(resourceMetrics *ResourceMetrics, hostName string, timestamp pcommon.Timestamp) {
+func GenerateInstanceMetric(resourceMetrics *ResourceMetrics, hostName string, startTimestamp pcommon.Timestamp, endTimestamp pcommon.Timestamp) {
 	attributes := pcommon.NewMap()
 	attributes.PutStr("instanceName", hostName)
 	attributes.PutStr("host.displayName", hostName)
-	resourceMetrics.IncrementSum("apm.service.instance.count", pcommon.NewMap(), timestamp)
+	resourceMetrics.IncrementSum("apm.service.instance.count", pcommon.NewMap(), startTimestamp, endTimestamp)
 }

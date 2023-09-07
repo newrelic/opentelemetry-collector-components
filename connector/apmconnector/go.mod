@@ -4,6 +4,7 @@ go 1.20
 
 require (
 	github.com/google/go-cmp v0.5.9
+	github.com/lightstep/go-expohisto v1.0.0
 	github.com/stretchr/testify v1.8.4
 	go.opentelemetry.io/collector/component v0.83.0
 	go.opentelemetry.io/collector/confmap v0.83.0

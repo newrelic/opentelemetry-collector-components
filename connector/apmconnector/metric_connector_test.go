@@ -4,11 +4,13 @@
 package apmconnector
 
 import (
+	"fmt"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/assert"
 	"go.opentelemetry.io/collector/pdata/pcommon"
+	"go.opentelemetry.io/collector/pdata/pmetric"
 	"go.opentelemetry.io/collector/pdata/ptrace"
 	"go.uber.org/zap"
 )
@@ -35,11 +37,11 @@ func TestConvertOneSpanToMetrics(t *testing.T) {
 	serviceName, _ := rm.Resource().Attributes().Get("service.name")
 	assert.Equal(t, "service", serviceName.AsString())
 	sm := rm.ScopeMetrics().At(0)
-	// FIXME this is brittle, throw in a map
-	metric := sm.Metrics().At(3)
-	assert.Equal(t, "apm.service.transaction.duration", metric.Name())
-	dp := metric.Histogram().DataPoints().At(0)
-	assert.Equal(t, 1.0, dp.Sum())
+	checkSumMetric(t, "apm.service.transaction.apdex", 1, sm.Metrics())
+	checkSumMetric(t, "apm.service.apdex", 1, sm.Metrics())
+	checkHistogramMetric(t, "apm.service.overview.web", 1, sm.Metrics())
+	checkHistogramMetric(t, "apm.service.transaction.duration", 1, sm.Metrics())
+	checkHistogramMetric(t, "apm.service.transaction.overview", 1, sm.Metrics())
 }
 
 func addSpan(spanSlice ptrace.SpanSlice, attributes map[string]string, spanValues []TestSpan) {
@@ -60,4 +62,42 @@ type TestSpan struct {
 	End   time.Time
 	Name  string
 	Kind  ptrace.SpanKind
+}
+
+func checkHistogramMetric(t *testing.T, name string, value float64, metrics pmetric.MetricSlice) {
+	t.Helper()
+	found := false
+
+	for i := 0; i < metrics.Len(); i++ {
+		m := metrics.At(i)
+		if m.Name() == name {
+			dp := m.ExponentialHistogram().DataPoints().At(0)
+			assert.Equal(t, value, dp.Sum())
+			found = true
+			break
+		}
+	}
+
+	if !found {
+		assert.Fail(t, fmt.Sprintf("Could not find metric %s", name))
+	}
+}
+
+func checkSumMetric(t *testing.T, name string, value int64, metrics pmetric.MetricSlice) {
+	t.Helper()
+	found := false
+
+	for i := 0; i < metrics.Len(); i++ {
+		m := metrics.At(i)
+		if m.Name() == name {
+			dp := m.Sum().DataPoints().At(0)
+			assert.Equal(t, value, dp.IntValue())
+			found = true
+			break
+		}
+	}
+
+	if !found {
+		assert.Fail(t, fmt.Sprintf("Could not find metric %s", name))
+	}
 }

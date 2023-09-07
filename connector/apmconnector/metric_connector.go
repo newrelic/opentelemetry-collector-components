@@ -47,7 +47,7 @@ func (c *ApmMetricConnector) Shutdown(context.Context) error {
 func ConvertTraces(logger *zap.Logger, config *Config, td ptrace.Traces) pmetric.Metrics {
 	attributesFilter := NewAttributeFilter()
 	transactions := NewTransactionsMap(config.ApdexT)
-	meterProvider := NewMeterProvider()
+	metricMap := NewMetrics()
 
 	for i := 0; i < td.ResourceSpans().Len(); i++ {
 		rs := td.ResourceSpans().At(i)
@@ -59,7 +59,7 @@ func ConvertTraces(logger *zap.Logger, config *Config, td ptrace.Traces) pmetric
 		if err != nil {
 			logger.Error("Could not filter resource attributes", zap.String("error", err.Error()))
 		}
-		resourceMetrics := meterProvider.getOrCreateResourceMetrics(resourceAttributes)
+		resourceMetrics := metricMap.GetOrCreateResource(resourceAttributes)
 
 		sdkLanguage := GetSdkLanguage(rs.Resource().Attributes())
 		for j := 0; j < rs.ScopeSpans().Len(); j++ {
@@ -68,7 +68,7 @@ func ConvertTraces(logger *zap.Logger, config *Config, td ptrace.Traces) pmetric
 				span := scopeSpan.Spans().At(k)
 				if k == 0 {
 					if hostName, exists := resourceAttributes.Get("host.name"); exists {
-						GenerateInstanceMetric(resourceMetrics, hostName.AsString(), span.EndTimestamp())
+						GenerateInstanceMetric(resourceMetrics, hostName.AsString(), span.StartTimestamp(), span.EndTimestamp())
 					}
 				}
 
@@ -81,5 +81,5 @@ func ConvertTraces(logger *zap.Logger, config *Config, td ptrace.Traces) pmetric
 
 	transactions.ProcessTransactions()
 
-	return meterProvider.Metrics
+	return metricMap.BuildOtelMetrics()
 }
