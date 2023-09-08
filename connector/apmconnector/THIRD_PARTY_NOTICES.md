@@ -29,6 +29,14 @@ Distributed under the following license(s):
 
 
 
+## [github.com/lightstep/go-expohisto](https://github.com/lightstep/go-expohisto)
+
+Distributed under the following license(s):
+
+* Apache-2.0
+
+
+
 ## [github.com/stretchr/testify](https://github.com/stretchr/testify)
 
 Distributed under the following license(s):
