@@ -1,0 +1,14 @@
+services:
+  otel-collector:
+    build:
+      context: ../..
+      dockerfile: examples/newrelicapm/Dockerfile
+    command: ["--config=/etc/otel-collector-config.yaml"]
+    environment:
+      - NEW_RELIC_OTLP_ENDPOINT
+      - NEW_RELIC_API_KEY
+    volumes:
+      - ./otel-collector-config.yaml:/etc/otel-collector-config.yaml
+    ports:
+      - "4317:4317"
+      - "4318:4318"

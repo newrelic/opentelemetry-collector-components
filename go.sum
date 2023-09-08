@@ -710,6 +710,8 @@ go.opentelemetry.io/collector/consumer v0.83.0 h1:8wg0UfFxxaGYsTkQGWuf1pE7C/dTvP
 go.opentelemetry.io/collector/consumer v0.83.0/go.mod h1:YLbmTqvgIOYUlEeWun8wQ4RZ0HaYjsABWKw7nwU9F3c=
 go.opentelemetry.io/collector/exporter v0.83.0 h1:1MPrMaCFvEvl291pAE0hTgPb7YybjSak9O5akzXqnXs=
 go.opentelemetry.io/collector/exporter v0.83.0/go.mod h1:5XIrrkfRI7Ndt5FnH0CC6It0VxTHRviGv/I350EWGBs=
+go.opentelemetry.io/collector/exporter/loggingexporter v0.83.0 h1:1k0zCEqUfNhWYw8X9zuQ4LNU4o5qwG6f1J3+P8lpe+E=
+go.opentelemetry.io/collector/exporter/loggingexporter v0.83.0/go.mod h1:/Sa1r32rwJpBRHSzWclacQlyr6BG/uRuaXqi/CmPvb0=
 go.opentelemetry.io/collector/exporter/otlpexporter v0.82.0 h1:tYCEUQpfyuS/NgrWg9Ulps6f0ffPSCBRTBdK6sXnSaw=
 go.opentelemetry.io/collector/exporter/otlpexporter v0.82.0/go.mod h1:CGeXJuRYxrzTtJUHlpLPHirzcmGq5qbcPff0ec+If14=
 go.opentelemetry.io/collector/extension v0.83.0 h1:O47qpJTeav6jATvnIUvUrO5KBMqa6ySMA5i+7XXW7GY=
