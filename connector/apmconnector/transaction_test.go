@@ -64,9 +64,9 @@ func TestGetTransactionMetricNameHttpTarget(t *testing.T) {
 func TestGetOrCreateTransaction(t *testing.T) {
 	transactions := NewTransactionsMap(0.5)
 	span := ptrace.NewSpan()
-	meterProvider := NewMeterProvider()
+	metricMap := NewMetrics()
 	resources := pcommon.NewMap()
-	metrics := meterProvider.getOrCreateResourceMetrics(resources)
+	metrics := metricMap.GetOrCreateResource(resources)
 	transaction, _ := transactions.GetOrCreateTransaction("java", span, metrics, resources)
 
 	transaction.SetRootSpan(span)
@@ -83,10 +83,10 @@ func TestGetOrCreateTransactionMultipleSpans(t *testing.T) {
 	span := ptrace.NewSpan()
 	span.SetTraceID(pcommon.TraceID{0x01})
 	span.SetSpanID(pcommon.SpanID{0x01})
-	meterProvider := NewMeterProvider()
+	metricMap := NewMetrics()
 	resources := pcommon.NewMap()
 	resources.PutStr("service.name", "authentication")
-	metrics := meterProvider.getOrCreateResourceMetrics(resources)
+	metrics := metricMap.GetOrCreateResource(resources)
 	transaction, _ := transactions.GetOrCreateTransaction("java", span, metrics, resources)
 
 	span = ptrace.NewSpan()
@@ -102,10 +102,10 @@ func TestGetOrCreateTransactionMultipleServices(t *testing.T) {
 	span := ptrace.NewSpan()
 	span.SetTraceID(pcommon.TraceID{0x01})
 	span.SetSpanID(pcommon.SpanID{0x01})
-	meterProvider := NewMeterProvider()
+	metricMap := NewMetrics()
 	resources := pcommon.NewMap()
 	resources.PutStr("service.name", "authentication")
-	metrics := meterProvider.getOrCreateResourceMetrics(resources)
+	metrics := metricMap.GetOrCreateResource(resources)
 	transaction, _ := transactions.GetOrCreateTransaction("java", span, metrics, resources)
 
 	span = ptrace.NewSpan()
