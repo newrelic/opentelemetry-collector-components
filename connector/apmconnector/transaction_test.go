@@ -24,9 +24,10 @@ func TestApdex(t *testing.T) {
 func TestGetTransactionMetricNameUnknown(t *testing.T) {
 	span := ptrace.NewSpan()
 	span.SetKind(ptrace.SpanKindServer)
+	span.SetName("Test")
 
 	name, txType := GetTransactionMetricName(span)
-	assert.Equal(t, "WebTransaction/Other/unknown", name)
+	assert.Equal(t, "WebTransaction/Other/Test", name)
 	assert.Equal(t, WebTransactionType, txType)
 	assert.Equal(t, "Web", txType.AsString())
 }
@@ -137,4 +138,39 @@ func TestGetTransactionMetricNameRpcServiceMethod(t *testing.T) {
 	name, txType := GetTransactionMetricName(span)
 	assert.Equal(t, "WebTransaction/rpc/oteldemo.CheckoutService/PlaceOrder", name)
 	assert.Equal(t, WebTransactionType, txType)
+}
+
+func TestGetTransactionMetricNameBogusConsumer(t *testing.T) {
+	span := ptrace.NewSpan()
+	span.SetKind(ptrace.SpanKindConsumer)
+
+	name, txType := GetTransactionMetricName(span)
+	assert.Equal(t, "OtherTransaction/Consumer/unknownSystem/unknown/unknown", name)
+	assert.Equal(t, OtherTransactionType, txType)
+}
+
+func TestGetTransactionMetricNameConsumer(t *testing.T) {
+	span := ptrace.NewSpan()
+	span.SetKind(ptrace.SpanKindConsumer)
+
+	span.Attributes().PutStr("messaging.system", "kafka")
+	span.Attributes().PutStr("messaging.destination.name", "orders")
+	span.Attributes().PutStr("messaging.operation", "receive")
+
+	name, txType := GetTransactionMetricName(span)
+	assert.Equal(t, "OtherTransaction/Consumer/kafka/orders/receive", name)
+	assert.Equal(t, OtherTransactionType, txType)
+}
+
+func TestGetTransactionMetricNameProducer(t *testing.T) {
+	span := ptrace.NewSpan()
+	span.SetKind(ptrace.SpanKindProducer)
+
+	span.Attributes().PutStr("messaging.system", "kafka")
+	span.Attributes().PutStr("messaging.destination.name", "orders")
+	span.Attributes().PutStr("messaging.operation", "publish")
+
+	name, txType := GetTransactionMetricName(span)
+	assert.Equal(t, "OtherTransaction/Producer/kafka/orders/publish", name)
+	assert.Equal(t, OtherTransactionType, txType)
 }
