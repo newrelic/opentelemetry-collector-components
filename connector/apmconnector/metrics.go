@@ -13,101 +13,191 @@ import (
 	"go.opentelemetry.io/collector/pdata/ptrace"
 )
 
-type MeterProvider struct {
-	Metrics pmetric.Metrics
-	// key is a hash of attributes
-	resourceMetrics map[string]*ResourceMetrics
+// Metrics is a data structure used by the connector while it is
+// processing spans. Once the processing is done, the map is converted
+// into OTEL metrics
+// The map roughly follows the structure of an OTEL resource metrics:
+// resource -> scope -> metric -> datapoints
+
+type Metrics map[string]*ResourceMetrics
+
+func NewMetrics() Metrics {
+	return make(Metrics)
+}
+
+func (metrics *Metrics) BuildOtelMetrics() pmetric.Metrics {
+	otelMetrics := pmetric.NewMetrics()
+	for _, rm := range *metrics {
+		resourceMetrics := otelMetrics.ResourceMetrics().AppendEmpty()
+		rm.attributes.CopyTo(resourceMetrics.Resource().Attributes())
+		for _, sm := range rm.scopeMetrics {
+			scopeMetrics := resourceMetrics.ScopeMetrics().AppendEmpty()
+			sm.origin.CopyTo(scopeMetrics.Scope())
+			for _, m := range sm.metrics {
+				addMetricToScope(*m, scopeMetrics)
+			}
+		}
+	}
+	return otelMetrics
+}
+
+func addMetricToScope(metric Metric, scopeMetrics pmetric.ScopeMetrics) {
+	otelMetric := scopeMetrics.Metrics().AppendEmpty()
+	otelMetric.SetName(metric.metricName)
+	otelMetric.SetUnit(metric.unit)
+
+	if len(metric.histogramDatapoints) > 0 {
+		histogram := otelMetric.SetEmptyExponentialHistogram()
+		histogram.SetAggregationTemporality(pmetric.AggregationTemporalityDelta)
+		otelDatapoints := histogram.DataPoints()
+		for _, dp := range metric.histogramDatapoints {
+			histoDp := otelDatapoints.AppendEmpty()
+			dp.histogram.AddDatapointToHistogram(histoDp)
+			histoDp.SetStartTimestamp(dp.startTimestamp)
+			histoDp.SetTimestamp(dp.timestamp)
+			dp.attributes.CopyTo(histoDp.Attributes())
+		}
+	}
+
+	if len(metric.sumDatapoints) > 0 {
+		sum := otelMetric.SetEmptySum()
+		sum.SetAggregationTemporality(pmetric.AggregationTemporalityCumulative)
+		sum.SetIsMonotonic(false)
+		otelDatapoints := sum.DataPoints()
+		for _, dp := range metric.sumDatapoints {
+			sumDp := otelDatapoints.AppendEmpty()
+			sumDp.SetTimestamp(dp.timestamp)
+			sumDp.SetStartTimestamp(dp.startTimestamp)
+			dp.attributes.CopyTo(sumDp.Attributes())
+			sumDp.SetIntValue(dp.value)
+		}
+	}
+}
+
+func (metrics *Metrics) GetOrCreateResource(attributes pcommon.Map) *ResourceMetrics {
+	key := getKeyFromMap(attributes)
+	res, resourcePresent := (*metrics)[key]
+	if resourcePresent {
+		return res
+	}
+	res = &ResourceMetrics{
+		attributes:   attributes,
+		scopeMetrics: make(map[string]*ScopeMetrics),
+	}
+	(*metrics)[key] = res
+	return res
 }
 
 type ResourceMetrics struct {
-	metrics      pmetric.MetricSlice
-	nameToMetric map[string]pmetric.Metric
+	attributes   pcommon.Map
+	scopeMetrics map[string]*ScopeMetrics
 }
 
-func NewMeterProvider() *MeterProvider {
-	return &MeterProvider{Metrics: pmetric.NewMetrics(), resourceMetrics: make(map[string]*ResourceMetrics)}
-}
-
-func (meterProvider *MeterProvider) getOrCreateResourceMetrics(attributes pcommon.Map) *ResourceMetrics {
-	key := getKeyFromMap(attributes)
-	if metrics, exists := meterProvider.resourceMetrics[key]; exists {
-		return metrics
+func (rm *ResourceMetrics) GetOrCreateScope(scope pcommon.InstrumentationScope) *ScopeMetrics {
+	key := getKeyFromMap(scope.Attributes())
+	scopeMetrics, scopeMetricsPresent := rm.scopeMetrics[key]
+	if scopeMetricsPresent {
+		return scopeMetrics
 	}
-	resourceMetrics := meterProvider.Metrics.ResourceMetrics().AppendEmpty()
-	attributes.CopyTo(resourceMetrics.Resource().Attributes())
-	metrics := resourceMetrics.ScopeMetrics().AppendEmpty().Metrics()
-	rm := &ResourceMetrics{metrics: metrics, nameToMetric: make(map[string]pmetric.Metric)}
-	meterProvider.resourceMetrics[key] = rm
-	return rm
-}
-
-func (resourceMetrics ResourceMetrics) RecordHistogramFromSpan(metricName string, attributes pcommon.Map,
-	span ptrace.Span) pmetric.HistogramDataPoint {
-	return resourceMetrics.RecordHistogram(metricName, attributes, span.StartTimestamp(), span.EndTimestamp(), (span.EndTimestamp() - span.StartTimestamp()).AsTime().UnixNano())
-}
-
-func (resourceMetrics ResourceMetrics) RecordHistogram(metricName string, attributes pcommon.Map,
-	startTimestamp, endTimestamp pcommon.Timestamp, durationNanos int64) pmetric.HistogramDataPoint {
-	histogram := resourceMetrics.GetOrCreateHistogramMetric(metricName)
-	dp := histogram.DataPoints().AppendEmpty()
-	dp.SetStartTimestamp(startTimestamp)
-	dp.SetTimestamp(endTimestamp)
-	attributes.CopyTo(dp.Attributes())
-
-	duration := NanosToSeconds(durationNanos)
-	dp.SetSum(duration)
-	dp.SetCount(1)
-	dp.SetMin(duration)
-	dp.SetMax(duration)
-	return dp
-}
-
-func (resourceMetrics *ResourceMetrics) GetOrCreateHistogramMetric(metricName string) pmetric.Histogram {
-	init := func(metric pmetric.Metric) {
-		metric.SetUnit("s")
-
-		histogram := metric.SetEmptyHistogram()
-		histogram.SetAggregationTemporality(pmetric.AggregationTemporalityDelta)
+	scopeMetrics = &ScopeMetrics{
+		origin:  scope,
+		metrics: make(map[string]*Metric),
 	}
-	metric := resourceMetrics.GetOrCreateMetric(metricName, init)
-	return metric.Histogram()
+	rm.scopeMetrics[key] = scopeMetrics
+	return scopeMetrics
 }
 
-func (resourceMetrics *ResourceMetrics) GetOrCreateSumMetric(metricName string) pmetric.Sum {
-	init := func(metric pmetric.Metric) {
-		sum := metric.SetEmptySum()
-		sum.SetAggregationTemporality(pmetric.AggregationTemporalityCumulative)
-		sum.SetIsMonotonic(false)
-	}
-	metric := resourceMetrics.GetOrCreateMetric(metricName, init)
-	return metric.Sum()
+func (rm *ResourceMetrics) AddHistogram(metricName string, attributes pcommon.Map, startTimestamp pcommon.Timestamp, endTimestamp pcommon.Timestamp, durationNanos int64) {
+	// FIXME - provide a scope?
+	scopeMetrics := rm.GetOrCreateScope(pcommon.NewInstrumentationScope())
+	metric := scopeMetrics.GetOrCreateMetric(metricName)
+	metric.unit = "s"
+	metric.AddHistogramDatapoint(attributes, startTimestamp, endTimestamp, NanosToSeconds(durationNanos))
 }
 
-func (resourceMetrics *ResourceMetrics) GetOrCreateMetric(metricName string, init func(pmetric.Metric)) pmetric.Metric {
-	if metric, exists := resourceMetrics.nameToMetric[metricName]; exists {
+func (rm *ResourceMetrics) AddHistogramFromSpan(metricName string, attributes pcommon.Map, span ptrace.Span) {
+	rm.AddHistogram(metricName, attributes, span.StartTimestamp(), span.EndTimestamp(), (span.EndTimestamp() - span.StartTimestamp()).AsTime().UnixNano())
+}
+
+func (rm *ResourceMetrics) IncrementSum(metricName string, attributes pcommon.Map, startTimestamp pcommon.Timestamp, endTimestamp pcommon.Timestamp) {
+	scopeMetrics := rm.GetOrCreateScope(pcommon.NewInstrumentationScope())
+	metric := scopeMetrics.GetOrCreateMetric(metricName)
+	metric.IncrementSumDatapoint(attributes, startTimestamp, endTimestamp)
+}
+
+type ScopeMetrics struct {
+	origin  pcommon.InstrumentationScope
+	metrics map[string]*Metric
+}
+
+func (sm *ScopeMetrics) GetOrCreateMetric(metricName string) *Metric {
+	metric, metricPresent := sm.metrics[metricName]
+	if metricPresent {
 		return metric
 	}
-	metric := resourceMetrics.metrics.AppendEmpty()
-	metric.SetName(metricName)
-	resourceMetrics.nameToMetric[metricName] = metric
-	init(metric)
+	metric = &Metric{
+		metricName:          metricName,
+		histogramDatapoints: make(map[string]HistogramDatapoint),
+		sumDatapoints:       make(map[string]SumDatapoint),
+	}
+	sm.metrics[metricName] = metric
 	return metric
 }
 
-func (resourceMetrics *ResourceMetrics) IncrementSum(metricName string, attributes pcommon.Map,
-	timestamp pcommon.Timestamp) pmetric.NumberDataPoint {
-	sum := resourceMetrics.GetOrCreateSumMetric(metricName)
-	dp := sum.DataPoints().AppendEmpty()
-	attributes.CopyTo(dp.Attributes())
+type Metric struct {
+	histogramDatapoints map[string]HistogramDatapoint
+	sumDatapoints       map[string]SumDatapoint
+	metricName          string
+	unit                string
+}
 
-	dp.SetTimestamp(timestamp)
+func (m *Metric) AddHistogramDatapoint(attributes pcommon.Map, startTimestamp pcommon.Timestamp, endTimestamp pcommon.Timestamp, value float64) {
+	dp, dpPresent := m.histogramDatapoints[getKeyFromMap(attributes)]
+	if !dpPresent {
+		histogram := NewHistogram()
+		dp = HistogramDatapoint{histogram: histogram, attributes: attributes, startTimestamp: startTimestamp, timestamp: endTimestamp}
+	}
+	dp.histogram.Update(value)
+	if dp.startTimestamp.AsTime().After(startTimestamp.AsTime()) {
+		dp.startTimestamp = startTimestamp
+	}
+	if dp.timestamp.AsTime().Before(endTimestamp.AsTime()) {
+		dp.timestamp = endTimestamp
+	}
+	m.histogramDatapoints[getKeyFromMap(attributes)] = dp
+}
 
-	dp.SetIntValue(1)
-	return dp
+func (m *Metric) IncrementSumDatapoint(attributes pcommon.Map, startTimestamp pcommon.Timestamp, endTimestamp pcommon.Timestamp) {
+	dp, dpPresent := m.sumDatapoints[getKeyFromMap(attributes)]
+	if !dpPresent {
+		dp = SumDatapoint{value: 0, attributes: attributes, startTimestamp: startTimestamp, timestamp: endTimestamp}
+	}
+	dp.value++
+	if dp.startTimestamp.AsTime().After(startTimestamp.AsTime()) {
+		dp.startTimestamp = startTimestamp
+	}
+	if dp.timestamp.AsTime().Before(endTimestamp.AsTime()) {
+		dp.timestamp = endTimestamp
+	}
+	m.sumDatapoints[getKeyFromMap(attributes)] = dp
 }
 
 func NanosToSeconds(nanos int64) float64 {
 	return float64(nanos) / 1e9
+}
+
+type HistogramDatapoint struct {
+	histogram      Histogram
+	attributes     pcommon.Map
+	startTimestamp pcommon.Timestamp
+	timestamp      pcommon.Timestamp
+}
+
+type SumDatapoint struct {
+	value          int64
+	attributes     pcommon.Map
+	startTimestamp pcommon.Timestamp
+	timestamp      pcommon.Timestamp
 }
 
 func getKeyFromMap(pMap pcommon.Map) string {
