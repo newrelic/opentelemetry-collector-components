@@ -124,7 +124,7 @@ func (transaction *Transaction) IsRootSet() bool {
 }
 
 func (transaction *Transaction) SetRootSpan(span ptrace.Span) bool {
-	// favor server span
+	// favor server/consumer/producer span
 	if transaction.IsRootSet() && (transaction.RootSpan.Kind() == ptrace.SpanKindServer ||
 		transaction.RootSpan.Kind() == ptrace.SpanKindConsumer ||
 		transaction.RootSpan.Kind() == ptrace.SpanKindProducer) {
@@ -135,7 +135,8 @@ func (transaction *Transaction) SetRootSpan(span ptrace.Span) bool {
 }
 
 func (transaction *Transaction) AddSpan(span ptrace.Span) {
-	if span.Kind() == ptrace.SpanKindServer {
+	if span.Kind() == ptrace.SpanKindServer || span.Kind() == ptrace.SpanKindConsumer ||
+		span.Kind() == ptrace.SpanKindProducer {
 		transaction.SetRootSpan(span)
 		return
 	}
@@ -176,6 +177,14 @@ func (transaction *Transaction) AddMeasurement(measurement *Measurement) {
 	measurement.Attributes.PutStr("metricTimesliceName", measurement.MetricTimesliceName)
 }
 
+func CopyAttributes(keys []string, from pcommon.Map, to pcommon.Map) {
+	for _, key := range keys {
+		if value, exists := from.Get(key); exists {
+			to.PutStr(key, value.AsString())
+		}
+	}
+}
+
 func (transaction *Transaction) ProcessDatabaseSpan(span ptrace.Span) bool {
 	dbSystem, dbSystemPresent := span.Attributes().Get(DbSystemAttributeName)
 	if !dbSystemPresent {
@@ -194,11 +203,7 @@ func (transaction *Transaction) ProcessDatabaseSpan(span ptrace.Span) bool {
 	attributes.PutStr(DbOperationAttributeName, dbOperation.AsString())
 	attributes.PutStr(DbSystemAttributeName, dbSystem.AsString())
 	attributes.PutStr(DbSQLTableAttributeName, dbTable.AsString())
-	for _, key := range []string{"net.peer.name", "db.name"} {
-		if value, exists := span.Attributes().Get(key); exists {
-			attributes.PutStr(key, value.AsString())
-		}
-	}
+	CopyAttributes([]string{"server.address", "server.port", "net.peer.name", "db.name"}, span.Attributes(), attributes)
 
 	timesliceName := fmt.Sprintf("Datastore/statement/%s/%s/%s", dbSystem.AsString(), dbTable.AsString(), dbOperation.AsString())
 	measurement := Measurement{SpanID: span.SpanID().String(), MetricName: "apm.service.datastore.operation.duration", Span: span,
@@ -369,6 +374,23 @@ func (measurement Measurement) ExclusiveTime(transaction *Transaction) int64 {
 }
 
 func GetTransactionMetricName(span ptrace.Span) (string, TransactionType) {
+	if span.Kind() == ptrace.SpanKindConsumer || span.Kind() == ptrace.SpanKindProducer {
+		system, systemPresent := span.Attributes().Get("messaging.system")
+		if !systemPresent {
+			system = pcommon.NewValueStr("unknownSystem")
+		}
+
+		destinationName, destinationNamePresent := span.Attributes().Get("messaging.destination.name")
+		if !destinationNamePresent {
+			destinationName = pcommon.NewValueStr("unknown")
+		}
+		operation, operationPresent := span.Attributes().Get("messaging.operation")
+		if !operationPresent {
+			operation = pcommon.NewValueStr("unknown")
+		}
+
+		return fmt.Sprintf("OtherTransaction/%s/%s/%s/%s", span.Kind().String(), system.AsString(), destinationName.AsString(), operation.AsString()), OtherTransactionType
+	}
 	if span.Kind() != ptrace.SpanKindServer {
 		return "", NullTransactionType
 	}
@@ -387,7 +409,7 @@ func GetTransactionMetricName(span ptrace.Span) (string, TransactionType) {
 	if method, methodPresent := span.Attributes().Get("http.method"); methodPresent {
 		return fmt.Sprintf("WebTransaction/http.method/%s", method.Str()), WebTransactionType
 	}
-	return "WebTransaction/Other/unknown", WebTransactionType
+	return fmt.Sprintf("WebTransaction/Other/%s", span.Name()), WebTransactionType
 }
 
 func GetWebTransactionMetricName(span ptrace.Span, name, nameType string) (string, TransactionType) {
