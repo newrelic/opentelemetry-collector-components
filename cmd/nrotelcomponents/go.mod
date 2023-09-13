@@ -165,6 +165,7 @@ require (
 	go.opentelemetry.io/collector/connector v0.83.0 // indirect
 	go.opentelemetry.io/collector/consumer v0.83.0 // indirect
 	go.opentelemetry.io/collector/exporter v0.83.0 // indirect
+	go.opentelemetry.io/collector/exporter/loggingexporter v0.83.0 // indirect
 	go.opentelemetry.io/collector/exporter/otlpexporter v0.82.0 // indirect
 	go.opentelemetry.io/collector/extension v0.83.0 // indirect
 	go.opentelemetry.io/collector/extension/auth v0.82.0 // indirect

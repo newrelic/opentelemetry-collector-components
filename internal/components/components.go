@@ -9,6 +9,7 @@ import (
 	"github.com/newrelic/opentelemetry-collector-components/receiver/nopreceiver"
 	"go.opentelemetry.io/collector/connector"
 	"go.opentelemetry.io/collector/exporter"
+	"go.opentelemetry.io/collector/exporter/loggingexporter"
 	"go.opentelemetry.io/collector/exporter/otlpexporter"
 	"go.opentelemetry.io/collector/extension"
 	"go.opentelemetry.io/collector/otelcol"
@@ -44,6 +45,7 @@ func Components() (otelcol.Factories, error) {
 	}
 
 	exporters := []exporter.Factory{
+		loggingexporter.NewFactory(),
 		otlpexporter.NewFactory(),
 		prometheusexporter.NewFactory(),
 		prometheusremotewriteexporter.NewFactory(),

@@ -117,6 +117,14 @@ Distributed under the following license(s):
 
 
 
+## [go.opentelemetry.io/collector/exporter/loggingexporter](https://go.opentelemetry.io/collector/exporter/loggingexporter)
+
+Distributed under the following license(s):
+
+* Apache-2.0
+
+
+
 ## [go.opentelemetry.io/collector/exporter/otlpexporter](https://go.opentelemetry.io/collector/exporter/otlpexporter)
 
 Distributed under the following license(s):

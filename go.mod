@@ -15,6 +15,7 @@ require (
 	go.opentelemetry.io/collector/component v0.83.0
 	go.opentelemetry.io/collector/connector v0.83.0
 	go.opentelemetry.io/collector/exporter v0.83.0
+	go.opentelemetry.io/collector/exporter/loggingexporter v0.83.0
 	go.opentelemetry.io/collector/exporter/otlpexporter v0.82.0
 	go.opentelemetry.io/collector/extension v0.83.0
 	go.opentelemetry.io/collector/processor v0.83.0
