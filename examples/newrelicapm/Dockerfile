@@ -23,5 +23,4 @@ COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 COPY --from=builder /dist /
 
 ENTRYPOINT ["/nrotelcomponents"]
-CMD ["--config", "/otel-collector-config.yaml"]
 EXPOSE 4317

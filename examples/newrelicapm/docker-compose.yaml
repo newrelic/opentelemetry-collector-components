@@ -12,3 +12,15 @@ services:
     ports:
       - "4317:4317"
       - "4318:4318"
+
+  app:
+    build:
+      dockerfile: DockerPetclinic
+    environment:
+      OTEL_SERVICE_NAME: "OpenTelemetry-NewRelic-APM-Demo"
+      OTEL_LOGS_EXPORTER: otlp
+      OTEL_EXPORTER_OTLP_ENDPOINT: otel-collector:4317
+    ports:
+      - "8080:8080"
+    depends_on:
+      - otel-collector
