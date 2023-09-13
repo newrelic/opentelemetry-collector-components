@@ -54,6 +54,10 @@ export NEW_RELIC_API_KEY=<your_api_key>
 docker compose up otel-collector
 ```
 
+## Building your own collector with the New Relic components
+
+**TODO:** add instructions for using the OpenTelemetry Collector Builder.
+
 ## Work in progress
 
 The components for the collector that drive the New Relic APM experience are a
