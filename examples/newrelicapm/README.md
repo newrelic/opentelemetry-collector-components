@@ -1,25 +1,12 @@
 # New Relic APM Components for the OpenTelemetry Collector
 
-New Relic APM offers insights into the performance and health of your services.
-Traditionally, the curated experiences New Relic APM provides are driven by
-data sent using one of our language agents.
-
-OpenTelemetry is an emerging standard that standardizes the format and
-conventions of telemetry data emitted by services. New Relic’s goal is to power
-the same experiences our customers have come to depend on whether running one
-of our own language agents or an OpenTelemetry agent.
-
-The OpenTelemetry Collector is a powerful tool that enables sophisticated
-processing and transformation of telemetry data and is a key component for
-achieving our goal. It is highly customizable and extensible.
-
-Contained in this repo are components for the OpenTelemetry Collector that
-generate metric data that drive New Relic’s APM experience. The generated
-metric data is derived from spans received by the collector.
+Contained in this repository are components for the OpenTelemetry Collector
+that  generate metric data that drive New Relic’s APM experience. The generated
+metric data is derived from spans received by the collector. Provided here are
+simple steps to help you get started using these components.
 
 ## Quick start
 
-Provided is a simple example to help you get started using these components.
 Run the example from this directory as follows:
 
 ```shell
@@ -27,48 +14,65 @@ export NEW_RELIC_API_KEY=<your_api_key>
 docker compose up --build
 ```
 
-The example includes a simple Java application instrumented with the
+The example starts an instance of the OpenTelemetry Collector configured with
+the New Relic APM [processor](../../processor/apmprocessor) and
+[connector](../../connector/apmconnector) components. View the full
+configuration of the collector [here](./otel-collector-config.yaml).
+
+The example also starts a simple Java application instrumented with the
 OpenTelemetry Java agent to enable you quickly get data reporting to New Relic.
 Navigate to http://localhost:8080 to exercise the application.
 
 In New Relic the service will be named `OpenTelemetry-NewRelic-APM-Demo`.
 
-**NOTE:** The application currently shows up under "Services - OpenTelemetry".
-When viewing the list of services, note the value of the `Provider` column. The
-provider indicates which experience you'll see when viewing the service. For
-services reporting data through a collector running New Relic's components the
-provider value will be `newrelic-opentelemetry` and indicates the NewRelic APM
-experience will be used when viewing the service.
+### Instrumenting your own applications
 
-## Instrumenting your own applications
+With the example running, if you have instrumented your own application with
+OpenTelemetry, you can configure it with an OTLP exporter and export data to
+http://localhost:4317.
 
-**TODO: information here about instrumenting your own application. Including information
-about configuring it to sample 100% spans and configuring it to send data over OTLP to
-the collector.**
+**NOTE:** In order to get accurate metric data, it is important that you also
+configure your application to sample and export all span data to the collector.
 
-You can just run the collector and configure your own application to send data
-over OTLP to http://localhost:4317:
+## Installing and deploying the collector in your environment
+
+There are two ways you can install and deploy the collector configured with the
+New Relic APM components:
+
+1. Use the preview version of NRDOT that includes the components.
+2. Build your own distribution of the collector.
+
+### Use the preview version of NRDOT
+
+**TODO:** Add details for how to acquire the preview version.
+
+### Build your own distribution
+
+The OpenTelemetry Collector community provides the [OpenTelemetry Collector
+Builder](https://github.com/open-telemetry/opentelemetry-collector/tree/main/cmd/builder)
+for easily building your own distribution of the collector.
+
+If you're already familiar with building and running your own distribution of
+the OpenTelemetry Collector, you can review and customize this
+[manifest.yaml](builder/distributions/nr-example-collector/manifest.yaml) for
+your needs.
+
+If you have not used the OpenTelemetry Collector Builder before, it's easy to
+get started. The manifest file is used to describe all the components for the
+OpenTelemetry Collector that you want to include in your distribution. When the
+builder is run it fetches all the components and compiles your distribution of
+the collector. The collector is developed in Golang, so running the builder
+requires that you have Golang tooling installed.
+
+The [builder](./builder) directory contains some helpful scripts that make
+downloading and running the builder easy. After modifying the manifest file
+for your needs, run:
 
 ```shell
-export NEW_RELIC_API_KEY=<your_api_key>
-docker compose up otel-collector
+cd builder
+make
 ```
 
-## Building your own collector with the New Relic components
-
-**TODO:** add instructions for using the OpenTelemetry Collector Builder.
-
-## Work in progress
-
-The components for the collector that drive the New Relic APM experience are a
-work-in-progress. 
-
-**TODO: elaborate on what you can expect from the components today and expand on
-the limitations below.**
-
-There are some limitations and a number of APM features that
-are not yet available:
-
-* Transaction traces
-* Slow SQL traces
-* All spans for a transaction must arrive at the collector in a single batch
+The built collector binary can be found in the 
+`builder/distributions/nr-example-collector/_build` directory. The binary is 
+compiled for the architecture of the machine you run it on.

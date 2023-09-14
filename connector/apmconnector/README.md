@@ -34,11 +34,11 @@ service:
       processors: [newrelicapm, batch]
       exporters: [newrelicapm, otlp]
     metrics:
-      receivers: [newrelicapm]
+      receivers: [otlp, newrelicapm]
       processors: [batch]
       exporters: [otlp]
     logs:
-      receivers: [newrelicapm]
+      receivers: [otlp, newrelicapm]
       processors: [batch]
       exporters: [otlp]
 ```
