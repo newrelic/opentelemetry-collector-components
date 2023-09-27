@@ -11,11 +11,13 @@ receivers:
 
 processors:
   - gomod: go.opentelemetry.io/collector/processor/batchprocessor v0.83.0
-  - gomod: github.com/newrelic/opentelemetry-collector-components/processor/apmprocessor v0.0.0-20230912075723-c7425ee99f47
+  - gomod: github.com/newrelic/opentelemetry-collector-components/processor/apmprocessor v0.0.1
+    path: ../../../../../processor/apmprocessor
 
 exporters:
   - gomod: go.opentelemetry.io/collector/exporter/loggingexporter v0.83.0
   - gomod: go.opentelemetry.io/collector/exporter/otlpexporter v0.83.0
 
 connectors:
-  - gomod: github.com/newrelic/opentelemetry-collector-components/connector/apmconnector v0.0.0-20230912075723-c7425ee99f47
+  - gomod: github.com/newrelic/opentelemetry-collector-components/connector/apmconnector v0.0.1
+    path: ../../../../../connector/apmconnector
