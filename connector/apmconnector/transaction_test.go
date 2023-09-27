@@ -36,9 +36,10 @@ func TestGetTransactionMetricNameRoute(t *testing.T) {
 	span := ptrace.NewSpan()
 	span.SetKind(ptrace.SpanKindServer)
 	span.Attributes().PutStr("http.route", "/users")
+	span.Attributes().PutStr("http.method", "GET")
 
 	name, txType := GetTransactionMetricName(span)
-	assert.Equal(t, "WebTransaction/http.route/users", name)
+	assert.Equal(t, "WebTransaction/http.route/users (GET)", name)
 	assert.Equal(t, WebTransactionType, txType)
 }
 
@@ -56,9 +57,10 @@ func TestGetTransactionMetricNameHttpTarget(t *testing.T) {
 	span := ptrace.NewSpan()
 	span.SetKind(ptrace.SpanKindServer)
 	span.Attributes().PutStr("http.target", "/owners/5")
+	span.Attributes().PutStr("http.request.method", "GET")
 
 	name, txType := GetTransactionMetricName(span)
-	assert.Equal(t, "WebTransaction/Uri/owners/5", name)
+	assert.Equal(t, "WebTransaction/Uri/owners/5 (GET)", name)
 	assert.Equal(t, WebTransactionType, txType)
 }
 
@@ -170,7 +172,7 @@ func TestGetTransactionMetricNameProducer(t *testing.T) {
 	span.Attributes().PutStr("messaging.destination.name", "orders")
 	span.Attributes().PutStr("messaging.operation", "publish")
 
-	name, txType := GetTransactionMetricName(span)
-	assert.Equal(t, "OtherTransaction/Producer/kafka/orders/publish", name)
-	assert.Equal(t, OtherTransactionType, txType)
+	// we don't name transactions with producer spans
+	_, txType := GetTransactionMetricName(span)
+	assert.Equal(t, NullTransactionType, txType)
 }
