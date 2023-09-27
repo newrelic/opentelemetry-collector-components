@@ -2,19 +2,14 @@ FROM golang:1.20 as builder
 
 WORKDIR /build
 
-COPY go.mod go.sum ./
-COPY connector/apmconnector ./connector/apmconnector
-COPY processor/apmprocessor ./processor/apmprocessor
-COPY receiver/nopreceiver ./receiver/nopreceiver
-RUN go mod download -x
-
 COPY . ./
 
-WORKDIR /build/cmd/nrotelcomponents
-RUN CGO_ENABLED=0 GOOS=linux go build -v -a .
+WORKDIR /build/examples/newrelicapm/builder
+
+RUN CGO_ENABLED=0 GOOS=linux make
 
 WORKDIR /dist
-RUN cp /build/cmd/nrotelcomponents/nrotelcomponents ./nrotelcomponents
+RUN cp /build/examples/newrelicapm/builder/distributions/nr-example-collector/_build/nr_example_collector ./nrotelcomponents
 COPY examples/newrelicapm/otel-collector-config.yaml ./
 
 FROM scratch
