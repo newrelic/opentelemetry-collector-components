@@ -375,45 +375,57 @@ func (measurement Measurement) ExclusiveTime(transaction *Transaction) int64 {
 
 func GetTransactionMetricName(span ptrace.Span) (string, TransactionType) {
 	if span.Kind() == ptrace.SpanKindConsumer || span.Kind() == ptrace.SpanKindProducer {
-		system, systemPresent := span.Attributes().Get("messaging.system")
-		if !systemPresent {
-			system = pcommon.NewValueStr("unknownSystem")
-		}
-
-		destinationName, destinationNamePresent := span.Attributes().Get("messaging.destination.name")
-		if !destinationNamePresent {
-			destinationName = pcommon.NewValueStr("unknown")
-		}
-		operation, operationPresent := span.Attributes().Get("messaging.operation")
-		if !operationPresent {
-			operation = pcommon.NewValueStr("unknown")
-		}
-
-		return fmt.Sprintf("OtherTransaction/%s/%s/%s/%s", span.Kind().String(), system.AsString(), destinationName.AsString(), operation.AsString()), OtherTransactionType
+		return GetConsumerOrProducerTransactionMetricName(span.Kind().String(), span.Attributes())
 	}
 	if span.Kind() != ptrace.SpanKindServer {
 		return "", NullTransactionType
 	}
-	if rpcService, rpcServicePresent := span.Attributes().Get("rpc.service"); rpcServicePresent {
-		if rpcMethod, rpcMethodPresent := span.Attributes().Get("rpc.method"); rpcMethodPresent {
+	name, txType := GetServerTransactionMetricName(span.Attributes())
+	if txType == NullTransactionType {
+		return fmt.Sprintf("WebTransaction/Other/%s", span.Name()), WebTransactionType
+	}
+	return name, txType
+}
+
+func GetConsumerOrProducerTransactionMetricName(kind string, attributes pcommon.Map) (string, TransactionType) {
+	system, systemPresent := attributes.Get("messaging.system")
+	if !systemPresent {
+		system = pcommon.NewValueStr("unknownSystem")
+	}
+
+	destinationName, destinationNamePresent := attributes.Get("messaging.destination.name")
+	if !destinationNamePresent {
+		destinationName = pcommon.NewValueStr("unknown")
+	}
+	operation, operationPresent := attributes.Get("messaging.operation")
+	if !operationPresent {
+		operation = pcommon.NewValueStr("unknown")
+	}
+
+	return fmt.Sprintf("OtherTransaction/%s/%s/%s/%s", kind, system.AsString(), destinationName.AsString(), operation.AsString()), OtherTransactionType
+}
+
+func GetServerTransactionMetricName(attributes pcommon.Map) (string, TransactionType) {
+	if rpcService, rpcServicePresent := attributes.Get("rpc.service"); rpcServicePresent {
+		if rpcMethod, rpcMethodPresent := attributes.Get("rpc.method"); rpcMethodPresent {
 			return fmt.Sprintf("WebTransaction/rpc/%s/%s", rpcService.AsString(), rpcMethod.AsString()), WebTransactionType
 		}
 		return fmt.Sprintf("WebTransaction/rpc/%s", rpcService.AsString()), WebTransactionType
 	}
-	if httpRoute, routePresent := span.Attributes().Get("http.route"); routePresent {
-		return GetWebTransactionMetricName(span, httpRoute.Str(), "http.route")
+	if httpRoute, routePresent := attributes.Get("http.route"); routePresent {
+		return GetWebTransactionMetricName(attributes, httpRoute.Str(), "http.route")
 	}
-	if urlPath, _ := GetFirst(span.Attributes(), []string{"url.path", "http.target"}); urlPath.Type() != pcommon.ValueTypeEmpty {
-		return GetWebTransactionMetricName(span, urlPath.Str(), "Uri")
+	if urlPath, _ := GetFirst(attributes, []string{"url.path", "http.target"}); urlPath.Type() != pcommon.ValueTypeEmpty {
+		return GetWebTransactionMetricName(attributes, urlPath.Str(), "Uri")
 	}
-	if method, methodPresent := span.Attributes().Get("http.method"); methodPresent {
+	if method, methodPresent := attributes.Get("http.method"); methodPresent {
 		return fmt.Sprintf("WebTransaction/http.method/%s", method.Str()), WebTransactionType
 	}
-	return fmt.Sprintf("WebTransaction/Other/%s", span.Name()), WebTransactionType
+	return "", NullTransactionType
 }
 
-func GetWebTransactionMetricName(span ptrace.Span, name, nameType string) (string, TransactionType) {
-	if method, methodPresent := span.Attributes().Get("http.method"); methodPresent {
+func GetWebTransactionMetricName(attributes pcommon.Map, name, nameType string) (string, TransactionType) {
+	if method, methodPresent := attributes.Get("http.method"); methodPresent {
 		return fmt.Sprintf("WebTransaction/%s%s (%s)", nameType, name, method.Str()), WebTransactionType
 	}
 	return fmt.Sprintf("WebTransaction/%s%s", nameType, name), WebTransactionType
