@@ -417,13 +417,13 @@ func GetServerTransactionMetricName(attributes pcommon.Map) (string, Transaction
 		return GetWebTransactionMetricName(attributes, urlPath.Str(), "Uri")
 	}
 
-	if method, methodPresent := GetHttpMethod(attributes); methodPresent {
+	if method, methodPresent := GetHTTPMethod(attributes); methodPresent {
 		return fmt.Sprintf("WebTransaction/http.method/%s", method), WebTransactionType
 	}
 	return "", NullTransactionType
 }
 
-func GetHttpMethod(attributes pcommon.Map) (string, bool) {
+func GetHTTPMethod(attributes pcommon.Map) (string, bool) {
 	method, _ := GetFirst(attributes, []string{"http.request.method", "http.method"})
 	if method.Type() == pcommon.ValueTypeEmpty {
 		return "", false
@@ -432,7 +432,7 @@ func GetHttpMethod(attributes pcommon.Map) (string, bool) {
 }
 
 func GetWebTransactionMetricName(attributes pcommon.Map, name, nameType string) (string, TransactionType) {
-	if method, methodPresent := GetHttpMethod(attributes); methodPresent {
+	if method, methodPresent := GetHTTPMethod(attributes); methodPresent {
 		return fmt.Sprintf("WebTransaction/%s%s (%s)", nameType, name, method), WebTransactionType
 	}
 	return fmt.Sprintf("WebTransaction/%s%s", nameType, name), WebTransactionType
