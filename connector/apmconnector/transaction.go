@@ -126,8 +126,7 @@ func (transaction *Transaction) IsRootSet() bool {
 func (transaction *Transaction) SetRootSpan(span ptrace.Span) bool {
 	// favor server/consumer/producer span
 	if transaction.IsRootSet() && (transaction.RootSpan.Kind() == ptrace.SpanKindServer ||
-		transaction.RootSpan.Kind() == ptrace.SpanKindConsumer ||
-		transaction.RootSpan.Kind() == ptrace.SpanKindProducer) {
+		transaction.RootSpan.Kind() == ptrace.SpanKindConsumer) {
 		return false
 	}
 	transaction.RootSpan = span
@@ -135,8 +134,7 @@ func (transaction *Transaction) SetRootSpan(span ptrace.Span) bool {
 }
 
 func (transaction *Transaction) AddSpan(span ptrace.Span) {
-	if span.Kind() == ptrace.SpanKindServer || span.Kind() == ptrace.SpanKindConsumer ||
-		span.Kind() == ptrace.SpanKindProducer {
+	if span.Kind() == ptrace.SpanKindServer || span.Kind() == ptrace.SpanKindConsumer {
 		transaction.SetRootSpan(span)
 		return
 	}
@@ -374,8 +372,8 @@ func (measurement Measurement) ExclusiveTime(transaction *Transaction) int64 {
 }
 
 func GetTransactionMetricName(span ptrace.Span) (string, TransactionType) {
-	if span.Kind() == ptrace.SpanKindConsumer || span.Kind() == ptrace.SpanKindProducer {
-		return GetConsumerOrProducerTransactionMetricName(span.Kind().String(), span.Attributes())
+	if span.Kind() == ptrace.SpanKindConsumer {
+		return GetConsumerTransactionMetricName(span.Attributes())
 	}
 	if span.Kind() != ptrace.SpanKindServer {
 		return "", NullTransactionType
@@ -387,7 +385,7 @@ func GetTransactionMetricName(span ptrace.Span) (string, TransactionType) {
 	return name, txType
 }
 
-func GetConsumerOrProducerTransactionMetricName(kind string, attributes pcommon.Map) (string, TransactionType) {
+func GetConsumerTransactionMetricName(attributes pcommon.Map) (string, TransactionType) {
 	system, systemPresent := attributes.Get("messaging.system")
 	if !systemPresent {
 		system = pcommon.NewValueStr("unknownSystem")
@@ -402,7 +400,7 @@ func GetConsumerOrProducerTransactionMetricName(kind string, attributes pcommon.
 		operation = pcommon.NewValueStr("unknown")
 	}
 
-	return fmt.Sprintf("OtherTransaction/%s/%s/%s/%s", kind, system.AsString(), destinationName.AsString(), operation.AsString()), OtherTransactionType
+	return fmt.Sprintf("OtherTransaction/Consumer/%s/%s/%s", system.AsString(), destinationName.AsString(), operation.AsString()), OtherTransactionType
 }
 
 func GetServerTransactionMetricName(attributes pcommon.Map) (string, TransactionType) {

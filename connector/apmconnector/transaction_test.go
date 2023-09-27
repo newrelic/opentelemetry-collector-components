@@ -170,7 +170,7 @@ func TestGetTransactionMetricNameProducer(t *testing.T) {
 	span.Attributes().PutStr("messaging.destination.name", "orders")
 	span.Attributes().PutStr("messaging.operation", "publish")
 
-	name, txType := GetTransactionMetricName(span)
-	assert.Equal(t, "OtherTransaction/Producer/kafka/orders/publish", name)
-	assert.Equal(t, OtherTransactionType, txType)
+	// we don't name transactions with producer spans
+	_, txType := GetTransactionMetricName(span)
+	assert.Equal(t, NullTransactionType, txType)
 }
