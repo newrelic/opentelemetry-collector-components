@@ -298,7 +298,7 @@ func (transaction *Transaction) ProcessRootSpan() bool {
 		attributes.PutStr("transactionName", transactionName)
 		attributes.PutStr("metricTimesliceName", transactionName)
 
-		transaction.resourceMetrics.AddHistogramFromSpan("apm.service.transaction.duration", attributes, span)
+		// transaction.resourceMetrics.AddHistogramFromSpan("apm.service.transaction.duration", attributes, span)
 
 		if remainingNanos > 0 {
 			// FIXME this is already in the map
@@ -369,6 +369,14 @@ func (measurement Measurement) ExclusiveTime(transaction *Transaction) int64 {
 	// we no longer need the summed child durations, delete that
 	delete(transaction.SpanToChildDuration, measurement.SpanID)
 	return measurement.DurationNanos - childDurationNanos
+}
+
+func GetTransactionMetricNameFromHttpServerDurationAttributes(p pcommon.Map) (string, TransactionType) {
+	name, txType := GetServerTransactionMetricName(p)
+	if txType == NullTransactionType {
+		return fmt.Sprintf("WebTransaction/Other/Unknown"), WebTransactionType
+	}
+	return name, txType
 }
 
 func GetTransactionMetricName(span ptrace.Span) (string, TransactionType) {

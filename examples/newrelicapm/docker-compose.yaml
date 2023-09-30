@@ -19,7 +19,7 @@ services:
     environment:
       OTEL_SERVICE_NAME: "OpenTelemetry-NewRelic-APM-Demo"
       OTEL_LOGS_EXPORTER: otlp
-      OTEL_EXPORTER_OTLP_ENDPOINT: otel-collector:4317
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4317
     ports:
       - "8080:8080"
     depends_on:
