@@ -7,6 +7,7 @@ import (
 	"context"
 	"go.opentelemetry.io/collector/component"
 	"go.opentelemetry.io/collector/consumer"
+	"go.opentelemetry.io/collector/pdata/pcommon"
 	"go.opentelemetry.io/collector/pdata/pmetric"
 	"go.uber.org/zap"
 )
@@ -45,6 +46,7 @@ func (c *OpenTelemetryMetricToApmMetricConnector) Shutdown(context.Context) erro
 func ConvertMetrics(logger *zap.Logger, config *Config, md pmetric.Metrics) pmetric.Metrics {
 	newMetrics := pmetric.NewMetrics()
 	attributesFilter := NewAttributeFilter()
+	metricMap := NewMetrics()
 
 	for i := 0; i < md.ResourceMetrics().Len(); i++ {
 		rs := md.ResourceMetrics().At(i)
@@ -56,6 +58,8 @@ func ConvertMetrics(logger *zap.Logger, config *Config, md pmetric.Metrics) pmet
 		rms := newMetrics.ResourceMetrics().AppendEmpty()
 		resourceAttributes.CopyTo(rms.Resource().Attributes())
 
+		resourceMetrics := metricMap.GetOrCreateResource(resourceAttributes)
+
 		for j := 0; j < rs.ScopeMetrics().Len(); j++ {
 			scopeMetric := rs.ScopeMetrics().At(j)
 			sm := rms.ScopeMetrics().AppendEmpty()
@@ -65,7 +69,7 @@ func ConvertMetrics(logger *zap.Logger, config *Config, md pmetric.Metrics) pmet
 				metric := scopeMetric.Metrics().At(k)
 				if metric.Name() == "http.server.duration" || metric.Name() == "http.server.request.duration" {
 					newMetric := pmetric.NewMetric()
-					newMetric.SetName("newrelic.apm.service.transaction.duration")
+					newMetric.SetName("apm.service.transaction.duration")
 					newMetric.SetDescription("Duration of the transaction")
 					newMetric.SetUnit("s")
 
@@ -81,6 +85,23 @@ func ConvertMetrics(logger *zap.Logger, config *Config, md pmetric.Metrics) pmet
 							dp.Attributes().PutStr("transactionType", "Web")
 							dp.Attributes().PutStr("transactionName", name)
 							dp.Attributes().PutStr("metricTimesliceName", name)
+
+							isError := hasErrorStatusCode(srcDp.Attributes())
+							if isError {
+								{
+									attributes := pcommon.NewMap()
+									attributes.PutStr("transactionType", "Web")
+									sum := resourceMetrics.GetSum("apm.service.error.count", attributes, srcDp.StartTimestamp(), srcDp.Timestamp())
+									sum.Add(int64(dp.Count()), srcDp.StartTimestamp(), srcDp.Timestamp())
+								}
+								{
+									attributes := pcommon.NewMap()
+									attributes.PutStr("transactionType", "Web")
+									attributes.PutStr("transactionName", name)
+									sum := resourceMetrics.GetSum("apm.service.transaction.error.count", attributes, srcDp.StartTimestamp(), srcDp.Timestamp())
+									sum.Add(int64(dp.Count()), srcDp.StartTimestamp(), srcDp.Timestamp())
+								}
+							}
 						}
 						newMetric.Histogram().SetAggregationTemporality(metric.Histogram().AggregationTemporality())
 						newMetric.CopyTo(sm.Metrics().AppendEmpty())
@@ -95,6 +116,23 @@ func ConvertMetrics(logger *zap.Logger, config *Config, md pmetric.Metrics) pmet
 							dp.Attributes().PutStr("transactionType", "Web")
 							dp.Attributes().PutStr("transactionName", name)
 							dp.Attributes().PutStr("metricTimesliceName", name)
+
+							isError := hasErrorStatusCode(srcDp.Attributes())
+							if isError {
+								{
+									attributes := pcommon.NewMap()
+									attributes.PutStr("transactionType", "Web")
+									sum := resourceMetrics.GetSum("apm.service.error.count", attributes, srcDp.StartTimestamp(), srcDp.Timestamp())
+									sum.Add(int64(dp.Count()), srcDp.StartTimestamp(), srcDp.Timestamp())
+								}
+								{
+									attributes := pcommon.NewMap()
+									attributes.PutStr("transactionType", "Web")
+									attributes.PutStr("transactionName", name)
+									sum := resourceMetrics.GetSum("apm.service.transaction.error.count", attributes, srcDp.StartTimestamp(), srcDp.Timestamp())
+									sum.Add(int64(dp.Count()), srcDp.StartTimestamp(), srcDp.Timestamp())
+								}
+							}
 						}
 						newMetric.ExponentialHistogram().SetAggregationTemporality(metric.ExponentialHistogram().AggregationTemporality())
 						newMetric.CopyTo(sm.Metrics().AppendEmpty())
@@ -106,5 +144,15 @@ func ConvertMetrics(logger *zap.Logger, config *Config, md pmetric.Metrics) pmet
 		}
 	}
 
+	metricMap.AppendOtelMetrics(newMetrics)
+
 	return newMetrics
+}
+
+func hasErrorStatusCode(attributes pcommon.Map) bool {
+	statusCodeValue, statusCodeKey := GetFirst(attributes, []string{"http.request.status_code", "http.status_code"})
+	if statusCodeKey != "" && statusCodeValue.Type() == pcommon.ValueTypeInt {
+		return statusCodeValue.Int() >= 500
+	}
+	return false
 }

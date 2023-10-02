@@ -41,6 +41,21 @@ func (metrics *Metrics) BuildOtelMetrics() pmetric.Metrics {
 	return otelMetrics
 }
 
+func (metrics *Metrics) AppendOtelMetrics(dest pmetric.Metrics) {
+	otelMetrics := dest
+	for _, rm := range *metrics {
+		resourceMetrics := otelMetrics.ResourceMetrics().AppendEmpty()
+		rm.attributes.CopyTo(resourceMetrics.Resource().Attributes())
+		for _, sm := range rm.scopeMetrics {
+			scopeMetrics := resourceMetrics.ScopeMetrics().AppendEmpty()
+			sm.origin.CopyTo(scopeMetrics.Scope())
+			for _, m := range sm.metrics {
+				addMetricToScope(*m, scopeMetrics)
+			}
+		}
+	}
+}
+
 func addMetricToScope(metric Metric, scopeMetrics pmetric.ScopeMetrics) {
 	otelMetric := scopeMetrics.Metrics().AppendEmpty()
 	otelMetric.SetName(metric.metricName)
@@ -122,7 +137,33 @@ func (rm *ResourceMetrics) AddHistogramFromSpan(metricName string, attributes pc
 func (rm *ResourceMetrics) IncrementSum(metricName string, attributes pcommon.Map, startTimestamp pcommon.Timestamp, endTimestamp pcommon.Timestamp) {
 	scopeMetrics := rm.GetOrCreateScope(pcommon.NewInstrumentationScope())
 	metric := scopeMetrics.GetOrCreateMetric(metricName)
-	metric.IncrementSumDatapoint(attributes, startTimestamp, endTimestamp)
+	sum := metric.GetSum(attributes, startTimestamp, endTimestamp)
+	sum.Add(1, startTimestamp, endTimestamp)
+}
+
+func (rm *ResourceMetrics) GetSum(metricName string, attributes pcommon.Map, startTimestamp pcommon.Timestamp, endTimestamp pcommon.Timestamp) *SumDatapoint {
+	scopeMetrics := rm.GetOrCreateScope(pcommon.NewInstrumentationScope())
+	metric := scopeMetrics.GetOrCreateMetric(metricName)
+	return metric.GetSum(attributes, startTimestamp, endTimestamp)
+}
+
+func (m *Metric) GetSum(attributes pcommon.Map, startTimestamp pcommon.Timestamp, endTimestamp pcommon.Timestamp) *SumDatapoint {
+	dp, dpPresent := m.sumDatapoints[getKeyFromMap(attributes)]
+	if !dpPresent {
+		dp = &SumDatapoint{value: 0, attributes: attributes, startTimestamp: startTimestamp, timestamp: endTimestamp}
+		m.sumDatapoints[getKeyFromMap(attributes)] = dp
+	}
+	return dp
+}
+
+func (m *SumDatapoint) Add(value int64, startTimestamp pcommon.Timestamp, endTimestamp pcommon.Timestamp) {
+	m.value += value
+	if m.startTimestamp.AsTime().After(startTimestamp.AsTime()) {
+		m.startTimestamp = startTimestamp
+	}
+	if m.timestamp.AsTime().Before(endTimestamp.AsTime()) {
+		m.timestamp = endTimestamp
+	}
 }
 
 type ScopeMetrics struct {
@@ -137,16 +178,16 @@ func (sm *ScopeMetrics) GetOrCreateMetric(metricName string) *Metric {
 	}
 	metric = &Metric{
 		metricName:          metricName,
-		histogramDatapoints: make(map[string]HistogramDatapoint),
-		sumDatapoints:       make(map[string]SumDatapoint),
+		histogramDatapoints: make(map[string]*HistogramDatapoint),
+		sumDatapoints:       make(map[string]*SumDatapoint),
 	}
 	sm.metrics[metricName] = metric
 	return metric
 }
 
 type Metric struct {
-	histogramDatapoints map[string]HistogramDatapoint
-	sumDatapoints       map[string]SumDatapoint
+	histogramDatapoints map[string]*HistogramDatapoint
+	sumDatapoints       map[string]*SumDatapoint
 	metricName          string
 	unit                string
 }
@@ -155,7 +196,7 @@ func (m *Metric) AddHistogramDatapoint(attributes pcommon.Map, startTimestamp pc
 	dp, dpPresent := m.histogramDatapoints[getKeyFromMap(attributes)]
 	if !dpPresent {
 		histogram := NewHistogram()
-		dp = HistogramDatapoint{histogram: histogram, attributes: attributes, startTimestamp: startTimestamp, timestamp: endTimestamp}
+		dp = &HistogramDatapoint{histogram: histogram, attributes: attributes, startTimestamp: startTimestamp, timestamp: endTimestamp}
 	}
 	dp.histogram.Update(value)
 	if dp.startTimestamp.AsTime().After(startTimestamp.AsTime()) {
@@ -170,7 +211,7 @@ func (m *Metric) AddHistogramDatapoint(attributes pcommon.Map, startTimestamp pc
 func (m *Metric) IncrementSumDatapoint(attributes pcommon.Map, startTimestamp pcommon.Timestamp, endTimestamp pcommon.Timestamp) {
 	dp, dpPresent := m.sumDatapoints[getKeyFromMap(attributes)]
 	if !dpPresent {
-		dp = SumDatapoint{value: 0, attributes: attributes, startTimestamp: startTimestamp, timestamp: endTimestamp}
+		dp = &SumDatapoint{value: 0, attributes: attributes, startTimestamp: startTimestamp, timestamp: endTimestamp}
 	}
 	dp.value++
 	if dp.startTimestamp.AsTime().After(startTimestamp.AsTime()) {
