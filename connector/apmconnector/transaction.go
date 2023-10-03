@@ -264,12 +264,12 @@ func (transaction *Transaction) ProcessRootSpan() bool {
 		return true
 	}
 
-	err := span.Status().Code() == ptrace.StatusCodeError
-	if err {
-		transaction.IncrementErrorCount(transactionName, transactionType, span.StartTimestamp(), span.EndTimestamp())
-	}
-
-	transaction.GenerateApdexMetrics(span, err, transactionName, transactionType)
+	//err := span.Status().Code() == ptrace.StatusCodeError
+	//if err {
+	//	transaction.IncrementErrorCount(transactionName, transactionType, span.StartTimestamp(), span.EndTimestamp())
+	//}
+	//
+	//transaction.GenerateApdexMetrics(span, err, transactionName, transactionType)
 
 	breakdownBySegment := make(map[string]int64)
 	totalBreakdownNanos := int64(0)
@@ -330,17 +330,17 @@ func (transaction *Transaction) GenerateApdexMetrics(span ptrace.Span, err bool,
 }
 
 func (transaction *Transaction) IncrementErrorCount(transactionName string, transactionType TransactionType, startTimestamp pcommon.Timestamp, endTimestamp pcommon.Timestamp) {
-	//{
-	//	attributes := pcommon.NewMap()
-	//	attributes.PutStr("transactionType", transactionType.AsString())
-	//	transaction.resourceMetrics.IncrementSum("apm.service.error.count", attributes, startTimestamp, endTimestamp)
-	//}
-	//{
-	//	attributes := pcommon.NewMap()
-	//	attributes.PutStr("transactionName", transactionName)
-	//	attributes.PutStr("transactionType", transactionType.AsString())
-	//	transaction.resourceMetrics.IncrementSum("apm.service.transaction.error.count", attributes, startTimestamp, endTimestamp)
-	//}
+	{
+		attributes := pcommon.NewMap()
+		attributes.PutStr("transactionType", transactionType.AsString())
+		transaction.resourceMetrics.IncrementSum("apm.service.error.count", attributes, startTimestamp, endTimestamp)
+	}
+	{
+		attributes := pcommon.NewMap()
+		attributes.PutStr("transactionName", transactionName)
+		attributes.PutStr("transactionType", transactionType.AsString())
+		transaction.resourceMetrics.IncrementSum("apm.service.transaction.error.count", attributes, startTimestamp, endTimestamp)
+	}
 }
 
 func (transaction *Transaction) ProcessMeasurement(measurement *Measurement, transactionType TransactionType, transactionName string) {
