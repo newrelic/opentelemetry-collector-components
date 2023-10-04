@@ -21,6 +21,14 @@ t/.
 
 
 
+## [github.com/newrelic/opentelemetry-collector-components/connector/apmconnector](https://github.com/newrelic/opentelemetry-collector-components)
+
+Distributed under the following license(s):
+
+* Apache-2.0
+
+
+
 ## [github.com/stretchr/testify](https://github.com/stretchr/testify)
 
 Distributed under the following license(s):
