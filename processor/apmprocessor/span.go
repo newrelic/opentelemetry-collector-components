@@ -42,11 +42,13 @@ func (sp *spanProcessor) processTraces(_ context.Context, td ptrace.Traces) (ptr
 						span.Attributes().PutStr("transaction.type", transactionType.AsString())
 						span.Attributes().PutStr("transaction.name", transactionName)
 					}
-				} else if parsedTable, parsed := sp.sqlparser.ParseDbTableFromSpan(span); parsed {
-					span.Attributes().PutStr(DbSQLTableAttributeName, parsedTable)
-					if dbSystem, dbSystemPresent := span.Attributes().Get(DbSystemAttributeName); dbSystemPresent && dbSystem.AsString() == "redis" {
-						if _, dbOperationPresent := span.Attributes().Get(DbOperationAttributeName); !dbOperationPresent {
-							span.Attributes().PutStr(DbOperationAttributeName, span.Name())
+				} else if span.Kind() == ptrace.SpanKindClient {
+					if parsedTable, parsed := sp.sqlparser.ParseDbTableFromSpan(span); parsed {
+						span.Attributes().PutStr(DbSQLTableAttributeName, parsedTable)
+						if dbSystem, dbSystemPresent := span.Attributes().Get(DbSystemAttributeName); dbSystemPresent && dbSystem.AsString() == "redis" {
+							if _, dbOperationPresent := span.Attributes().Get(DbOperationAttributeName); !dbOperationPresent {
+								span.Attributes().PutStr(DbOperationAttributeName, span.Name())
+							}
 						}
 					}
 				}
