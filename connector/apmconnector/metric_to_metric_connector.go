@@ -79,9 +79,9 @@ func ConvertMetrics(logger *zap.Logger, config *Config, md pmetric.Metrics) pmet
 							srcDp := metric.Histogram().DataPoints().At(i)
 							dp := newMetric.Histogram().DataPoints().AppendEmpty()
 							srcDp.CopyTo(dp)
-							name, _ := GetTransactionMetricNameFromAttributes(srcDp.Attributes())
+							name, txType := GetTransactionMetricNameFromAttributes(srcDp.Attributes())
 							dp.Attributes().Clear()
-							dp.Attributes().PutStr("transactionType", "Web")
+							dp.Attributes().PutStr("transactionType", txType.AsString())
 							dp.Attributes().PutStr("transactionName", name)
 							dp.Attributes().PutStr("metricTimesliceName", name)
 
@@ -89,13 +89,13 @@ func ConvertMetrics(logger *zap.Logger, config *Config, md pmetric.Metrics) pmet
 							if isError {
 								{
 									attributes := pcommon.NewMap()
-									attributes.PutStr("transactionType", "Web")
+									attributes.PutStr("transactionType", txType.AsString())
 									sum := resourceMetrics.GetSum("apm.service.error.count", attributes, srcDp.StartTimestamp(), srcDp.Timestamp())
 									sum.Add(int64(dp.Count()), srcDp.StartTimestamp(), srcDp.Timestamp())
 								}
 								{
 									attributes := pcommon.NewMap()
-									attributes.PutStr("transactionType", "Web")
+									attributes.PutStr("transactionType", txType.AsString())
 									attributes.PutStr("transactionName", name)
 									sum := resourceMetrics.GetSum("apm.service.transaction.error.count", attributes, srcDp.StartTimestamp(), srcDp.Timestamp())
 									sum.Add(int64(dp.Count()), srcDp.StartTimestamp(), srcDp.Timestamp())
@@ -126,9 +126,9 @@ func ConvertMetrics(logger *zap.Logger, config *Config, md pmetric.Metrics) pmet
 							srcDp := metric.ExponentialHistogram().DataPoints().At(i)
 							dp := newMetric.ExponentialHistogram().DataPoints().AppendEmpty()
 							srcDp.CopyTo(dp)
-							name, _ := GetTransactionMetricNameFromAttributes(srcDp.Attributes())
+							name, txType := GetTransactionMetricNameFromAttributes(srcDp.Attributes())
 							dp.Attributes().Clear()
-							dp.Attributes().PutStr("transactionType", "Web")
+							dp.Attributes().PutStr("transactionType", txType.AsString())
 							dp.Attributes().PutStr("transactionName", name)
 							dp.Attributes().PutStr("metricTimesliceName", name)
 
@@ -136,13 +136,13 @@ func ConvertMetrics(logger *zap.Logger, config *Config, md pmetric.Metrics) pmet
 							if isError {
 								{
 									attributes := pcommon.NewMap()
-									attributes.PutStr("transactionType", "Web")
+									attributes.PutStr("transactionType", txType.AsString())
 									sum := resourceMetrics.GetSum("apm.service.error.count", attributes, srcDp.StartTimestamp(), srcDp.Timestamp())
 									sum.Add(int64(dp.Count()), srcDp.StartTimestamp(), srcDp.Timestamp())
 								}
 								{
 									attributes := pcommon.NewMap()
-									attributes.PutStr("transactionType", "Web")
+									attributes.PutStr("transactionType", txType.AsString())
 									attributes.PutStr("transactionName", name)
 									sum := resourceMetrics.GetSum("apm.service.transaction.error.count", attributes, srcDp.StartTimestamp(), srcDp.Timestamp())
 									sum.Add(int64(dp.Count()), srcDp.StartTimestamp(), srcDp.Timestamp())
@@ -170,7 +170,7 @@ func generateApdexMetrics(apdex Apdex, zone string, resourceMetrics *ResourceMet
 	attributes := pcommon.NewMap()
 	attributes.PutDouble("apdex.value", apdex.apdexSatisfying)
 	attributes.PutStr("apdex.zone", zone)
-	attributes.PutStr("transactionType", "Web")
+	attributes.PutStr("transactionType", WebTransactionType.AsString())
 
 	apdexMetric := resourceMetrics.GetSum("apm.service.apdex", attributes, startTimestamp, timestamp)
 	apdexMetric.Add(count, startTimestamp, timestamp)
