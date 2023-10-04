@@ -3,8 +3,8 @@ module github.com/newrelic/opentelemetry-collector-components
 go 1.20
 
 require (
-	github.com/newrelic/opentelemetry-collector-components/connector/apmconnector v0.0.1-alpha
-	github.com/newrelic/opentelemetry-collector-components/processor/apmprocessor v0.0.1-alpha
+	github.com/newrelic/opentelemetry-collector-components/connector/apmconnector v0.0.1
+	github.com/newrelic/opentelemetry-collector-components/processor/apmprocessor v0.0.1
 	github.com/newrelic/opentelemetry-collector-components/receiver/nopreceiver v0.0.0-00010101000000-000000000000
 	github.com/open-telemetry/opentelemetry-collector-contrib/exporter/prometheusexporter v0.82.0
 	github.com/open-telemetry/opentelemetry-collector-contrib/exporter/prometheusremotewriteexporter v0.82.0
