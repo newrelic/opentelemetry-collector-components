@@ -38,8 +38,10 @@ func (sp *spanProcessor) processTraces(_ context.Context, td ptrace.Traces) (ptr
 				span := scopeSpan.Spans().At(k)
 				if span.Kind() == ptrace.SpanKindServer || span.Kind() == ptrace.SpanKindConsumer {
 					transactionName, transactionType := apmconnector.GetTransactionMetricName(span)
-					span.Attributes().PutStr("transaction.type", transactionType.AsString())
-					span.Attributes().PutStr("transaction.name", transactionName)
+					if transactionType != apmconnector.NullTransactionType {
+						span.Attributes().PutStr("transaction.type", transactionType.AsString())
+						span.Attributes().PutStr("transaction.name", transactionName)
+					}
 				} else if parsedTable, parsed := sp.sqlparser.ParseDbTableFromSpan(span); parsed {
 					span.Attributes().PutStr(DbSQLTableAttributeName, parsedTable)
 					if dbSystem, dbSystemPresent := span.Attributes().Get(DbSystemAttributeName); dbSystemPresent && dbSystem.AsString() == "redis" {
