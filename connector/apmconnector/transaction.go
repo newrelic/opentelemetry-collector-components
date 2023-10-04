@@ -371,7 +371,7 @@ func (measurement Measurement) ExclusiveTime(transaction *Transaction) int64 {
 	return measurement.DurationNanos - childDurationNanos
 }
 
-func GetTransactionMetricNameFromHttpServerDurationAttributes(p pcommon.Map) (string, TransactionType) {
+func GetTransactionMetricNameFromAttributes(p pcommon.Map) (string, TransactionType) {
 	name, txType := GetServerTransactionMetricName(p)
 	if txType == NullTransactionType {
 		return fmt.Sprintf("WebTransaction/Other/Unknown"), WebTransactionType
