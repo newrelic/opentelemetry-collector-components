@@ -48,120 +48,144 @@ func ConvertMetrics(logger *zap.Logger, config *Config, md pmetric.Metrics) pmet
 	metricMap := NewMetrics()
 
 	for i := 0; i < md.ResourceMetrics().Len(); i++ {
-		rs := md.ResourceMetrics().At(i)
+		rmCreated := false
+		rm := md.ResourceMetrics().At(i)
 
-		resourceAttributes, err := attributesFilter.FilterAttributes(rs.Resource().Attributes())
-		if err != nil {
-			logger.Error("Could not filter resource attributes", zap.String("error", err.Error()))
-		}
-		rms := newMetrics.ResourceMetrics().AppendEmpty()
-		resourceAttributes.CopyTo(rms.Resource().Attributes())
+		rmNew := pmetric.ResourceMetrics{}
+		metrics := &ResourceMetrics{}
 
-		resourceMetrics := metricMap.GetOrCreateResource(resourceAttributes)
+		for j := 0; j < rm.ScopeMetrics().Len(); j++ {
+			smCreated := false
+			sm := rm.ScopeMetrics().At(j)
 
-		for j := 0; j < rs.ScopeMetrics().Len(); j++ {
-			scopeMetric := rs.ScopeMetrics().At(j)
-			sm := rms.ScopeMetrics().AppendEmpty()
-			scopeMetric.Scope().Attributes().CopyTo(sm.Scope().Attributes())
+			smNew := pmetric.ScopeMetrics{}
 
-			for k := 0; k < scopeMetric.Metrics().Len(); k++ {
-				metric := scopeMetric.Metrics().At(k)
-				if metric.Name() == "http.server.duration" || metric.Name() == "http.server.request.duration" {
+			for k := 0; k < sm.Metrics().Len(); k++ {
+				m := sm.Metrics().At(k)
+
+				if m.Name() == "http.server.duration" || m.Name() == "http.server.request.duration" {
+					if !rmCreated {
+						resourceAttributes, err := attributesFilter.FilterAttributes(rm.Resource().Attributes())
+						if err != nil {
+							logger.Error("Could not filter resource attributes", zap.String("error", err.Error()))
+						}
+						rmNew = newMetrics.ResourceMetrics().AppendEmpty()
+						resourceAttributes.CopyTo(rmNew.Resource().Attributes())
+
+						// TODO: should we declare a New Relic specific schema?
+						// rmNew.SetSchemaUrl(rm.SchemaUrl())
+
+						metrics = metricMap.GetOrCreateResource(resourceAttributes)
+						rmCreated = true
+					}
+
+					if !smCreated {
+						smNew = rmNew.ScopeMetrics().AppendEmpty()
+
+						// TODO: do we want any of the scope attributes? or the schema?
+						// smNew.SetSchemaUrl(sm.SchemaUrl())
+						// sm.Scope().CopyTo(smNew.Scope())
+
+						smCreated = true
+					}
+
 					newMetric := pmetric.NewMetric()
 					newMetric.SetName("apm.service.transaction.duration")
 					newMetric.SetDescription("Duration of the transaction")
-					newMetric.SetUnit(metric.Unit())
+					newMetric.SetUnit(m.Unit())
 
-					switch metricType := metric.Type(); metricType {
+					switch metricType := m.Type(); metricType {
 					case pmetric.MetricTypeHistogram:
 						newMetric.SetEmptyHistogram().DataPoints().EnsureCapacity(3)
-						for i := 0; i < metric.Histogram().DataPoints().Len(); i++ {
-							srcDp := metric.Histogram().DataPoints().At(i)
-							dp := newMetric.Histogram().DataPoints().AppendEmpty()
-							srcDp.CopyTo(dp)
-							name, txType := GetTransactionMetricNameFromAttributes(srcDp.Attributes())
-							dp.Attributes().Clear()
-							dp.Attributes().PutStr("transactionType", txType.AsString())
-							dp.Attributes().PutStr("transactionName", name)
-							dp.Attributes().PutStr("metricTimesliceName", name)
+						for i := 0; i < m.Histogram().DataPoints().Len(); i++ {
+							dp := m.Histogram().DataPoints().At(i)
+							newDp := newMetric.Histogram().DataPoints().AppendEmpty()
+							dp.CopyTo(newDp)
+							name, txType := GetTransactionMetricNameFromAttributes(dp.Attributes())
+							newDp.Attributes().Clear()
+							newDp.Attributes().PutStr("transactionType", txType.AsString())
+							newDp.Attributes().PutStr("transactionName", name)
+							newDp.Attributes().PutStr("metricTimesliceName", name)
 
-							isError := ContainsErrorHttpStatusCode(srcDp.Attributes())
+							isError := ContainsErrorHttpStatusCode(dp.Attributes())
 							if isError {
 								{
 									attributes := pcommon.NewMap()
 									attributes.PutStr("transactionType", txType.AsString())
-									sum := resourceMetrics.GetSum("apm.service.error.count", attributes, srcDp.StartTimestamp(), srcDp.Timestamp())
-									sum.Add(int64(dp.Count()), srcDp.StartTimestamp(), srcDp.Timestamp())
+									sum := metrics.GetSum("apm.service.error.count", attributes, dp.StartTimestamp(), dp.Timestamp())
+									sum.Add(int64(newDp.Count()), dp.StartTimestamp(), dp.Timestamp())
 								}
 								{
 									attributes := pcommon.NewMap()
 									attributes.PutStr("transactionType", txType.AsString())
 									attributes.PutStr("transactionName", name)
-									sum := resourceMetrics.GetSum("apm.service.transaction.error.count", attributes, srcDp.StartTimestamp(), srcDp.Timestamp())
-									sum.Add(int64(dp.Count()), srcDp.StartTimestamp(), srcDp.Timestamp())
+									sum := metrics.GetSum("apm.service.transaction.error.count", attributes, dp.StartTimestamp(), dp.Timestamp())
+									sum.Add(int64(newDp.Count()), dp.StartTimestamp(), dp.Timestamp())
 								}
 
-								generateApdexMetrics(apdex, "F", resourceMetrics, srcDp.StartTimestamp(), srcDp.Timestamp(), int64(srcDp.Count()), name)
+								generateApdexMetrics(apdex, "F", metrics, dp.StartTimestamp(), dp.Timestamp(), int64(dp.Count()), name)
 							} else {
-								s, t, f := GetApdexFromExplicitHistogramBounds(dp.ExplicitBounds().AsRaw(), dp.BucketCounts().AsRaw(), metric.Unit(), apdex)
+								s, t, f := GetApdexFromExplicitHistogramBounds(newDp.ExplicitBounds().AsRaw(), newDp.BucketCounts().AsRaw(), m.Unit(), apdex)
 
 								if s > 0 {
-									generateApdexMetrics(apdex, "S", resourceMetrics, srcDp.StartTimestamp(), srcDp.Timestamp(), int64(s), name)
+									generateApdexMetrics(apdex, "S", metrics, dp.StartTimestamp(), dp.Timestamp(), int64(s), name)
 								}
 
 								if t > 0 {
-									generateApdexMetrics(apdex, "T", resourceMetrics, srcDp.StartTimestamp(), srcDp.Timestamp(), int64(t), name)
+									generateApdexMetrics(apdex, "T", metrics, dp.StartTimestamp(), dp.Timestamp(), int64(t), name)
 								}
 
 								if f > 0 {
-									generateApdexMetrics(apdex, "F", resourceMetrics, srcDp.StartTimestamp(), srcDp.Timestamp(), int64(f), name)
+									generateApdexMetrics(apdex, "F", metrics, dp.StartTimestamp(), dp.Timestamp(), int64(f), name)
 								}
 							}
 						}
-						newMetric.Histogram().SetAggregationTemporality(metric.Histogram().AggregationTemporality())
-						newMetric.CopyTo(sm.Metrics().AppendEmpty())
+						newMetric.Histogram().SetAggregationTemporality(m.Histogram().AggregationTemporality())
+						newMetric.CopyTo(smNew.Metrics().AppendEmpty())
 					case pmetric.MetricTypeExponentialHistogram:
 						newMetric.SetEmptyExponentialHistogram().DataPoints().EnsureCapacity(3)
-						for i := 0; i < metric.ExponentialHistogram().DataPoints().Len(); i++ {
-							srcDp := metric.ExponentialHistogram().DataPoints().At(i)
-							dp := newMetric.ExponentialHistogram().DataPoints().AppendEmpty()
-							srcDp.CopyTo(dp)
-							name, txType := GetTransactionMetricNameFromAttributes(srcDp.Attributes())
-							dp.Attributes().Clear()
-							dp.Attributes().PutStr("transactionType", txType.AsString())
-							dp.Attributes().PutStr("transactionName", name)
-							dp.Attributes().PutStr("metricTimesliceName", name)
+						for i := 0; i < m.ExponentialHistogram().DataPoints().Len(); i++ {
+							dp := m.ExponentialHistogram().DataPoints().At(i)
+							newDp := newMetric.ExponentialHistogram().DataPoints().AppendEmpty()
+							dp.CopyTo(newDp)
+							name, txType := GetTransactionMetricNameFromAttributes(dp.Attributes())
+							newDp.Attributes().Clear()
+							newDp.Attributes().PutStr("transactionType", txType.AsString())
+							newDp.Attributes().PutStr("transactionName", name)
+							newDp.Attributes().PutStr("metricTimesliceName", name)
 
-							isError := ContainsErrorHttpStatusCode(srcDp.Attributes())
+							isError := ContainsErrorHttpStatusCode(dp.Attributes())
 							if isError {
 								{
 									attributes := pcommon.NewMap()
 									attributes.PutStr("transactionType", txType.AsString())
-									sum := resourceMetrics.GetSum("apm.service.error.count", attributes, srcDp.StartTimestamp(), srcDp.Timestamp())
-									sum.Add(int64(dp.Count()), srcDp.StartTimestamp(), srcDp.Timestamp())
+									sum := metrics.GetSum("apm.service.error.count", attributes, dp.StartTimestamp(), dp.Timestamp())
+									sum.Add(int64(newDp.Count()), dp.StartTimestamp(), dp.Timestamp())
 								}
 								{
 									attributes := pcommon.NewMap()
 									attributes.PutStr("transactionType", txType.AsString())
 									attributes.PutStr("transactionName", name)
-									sum := resourceMetrics.GetSum("apm.service.transaction.error.count", attributes, srcDp.StartTimestamp(), srcDp.Timestamp())
-									sum.Add(int64(dp.Count()), srcDp.StartTimestamp(), srcDp.Timestamp())
+									sum := metrics.GetSum("apm.service.transaction.error.count", attributes, dp.StartTimestamp(), dp.Timestamp())
+									sum.Add(int64(newDp.Count()), dp.StartTimestamp(), dp.Timestamp())
 								}
 
-								generateApdexMetrics(apdex, "F", resourceMetrics, srcDp.StartTimestamp(), srcDp.Timestamp(), int64(srcDp.Count()), name)
+								generateApdexMetrics(apdex, "F", metrics, dp.StartTimestamp(), dp.Timestamp(), int64(dp.Count()), name)
 							}
 						}
-						newMetric.ExponentialHistogram().SetAggregationTemporality(metric.ExponentialHistogram().AggregationTemporality())
-						newMetric.CopyTo(sm.Metrics().AppendEmpty())
+						newMetric.ExponentialHistogram().SetAggregationTemporality(m.ExponentialHistogram().AggregationTemporality())
+						newMetric.CopyTo(smNew.Metrics().AppendEmpty())
 					default:
-						logger.Error("unexpected metric type", zap.String("name", metric.Name()), zap.String("type", metricType.String()))
+						logger.Error("unexpected metric type", zap.String("name", m.Name()), zap.String("type", metricType.String()))
 					}
 				}
 			}
 		}
 	}
 
-	metricMap.AppendOtelMetrics(newMetrics)
+	if newMetrics.ResourceMetrics().Len() > 0 {
+		metricMap.AppendOtelMetrics(newMetrics)
+	}
 
 	return newMetrics
 }
