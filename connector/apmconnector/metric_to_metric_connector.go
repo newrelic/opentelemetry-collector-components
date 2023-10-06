@@ -112,14 +112,14 @@ func ConvertMetrics(logger *zap.Logger, config *Config, md pmetric.Metrics) pmet
 								{
 									attributes := pcommon.NewMap()
 									attributes.PutStr("transactionType", txType.AsString())
-									sum := metrics.GetSum("apm.service.error.count", attributes, dp.StartTimestamp(), dp.Timestamp())
+									sum := metrics.GetSum("apm.service.error.count", attributes, true, dp.StartTimestamp(), dp.Timestamp())
 									sum.Add(int64(newDp.Count()), dp.StartTimestamp(), dp.Timestamp())
 								}
 								{
 									attributes := pcommon.NewMap()
 									attributes.PutStr("transactionType", txType.AsString())
 									attributes.PutStr("transactionName", name)
-									sum := metrics.GetSum("apm.service.transaction.error.count", attributes, dp.StartTimestamp(), dp.Timestamp())
+									sum := metrics.GetSum("apm.service.transaction.error.count", attributes, true, dp.StartTimestamp(), dp.Timestamp())
 									sum.Add(int64(newDp.Count()), dp.StartTimestamp(), dp.Timestamp())
 								}
 
@@ -159,14 +159,14 @@ func ConvertMetrics(logger *zap.Logger, config *Config, md pmetric.Metrics) pmet
 								{
 									attributes := pcommon.NewMap()
 									attributes.PutStr("transactionType", txType.AsString())
-									sum := metrics.GetSum("apm.service.error.count", attributes, dp.StartTimestamp(), dp.Timestamp())
+									sum := metrics.GetSum("apm.service.error.count", attributes, true, dp.StartTimestamp(), dp.Timestamp())
 									sum.Add(int64(newDp.Count()), dp.StartTimestamp(), dp.Timestamp())
 								}
 								{
 									attributes := pcommon.NewMap()
 									attributes.PutStr("transactionType", txType.AsString())
 									attributes.PutStr("transactionName", name)
-									sum := metrics.GetSum("apm.service.transaction.error.count", attributes, dp.StartTimestamp(), dp.Timestamp())
+									sum := metrics.GetSum("apm.service.transaction.error.count", attributes, true, dp.StartTimestamp(), dp.Timestamp())
 									sum.Add(int64(newDp.Count()), dp.StartTimestamp(), dp.Timestamp())
 								}
 
@@ -196,11 +196,11 @@ func generateApdexMetrics(apdex Apdex, zone string, resourceMetrics *ResourceMet
 	attributes.PutStr("apdex.zone", zone)
 	attributes.PutStr("transactionType", WebTransactionType.AsString())
 
-	apdexMetric := resourceMetrics.GetSum("apm.service.apdex", attributes, startTimestamp, timestamp)
+	apdexMetric := resourceMetrics.GetSum("apm.service.apdex", attributes, true, startTimestamp, timestamp)
 	apdexMetric.Add(count, startTimestamp, timestamp)
 
 	attributes.PutStr("transactionName", transactionName)
 
-	transactionApdexMetric := resourceMetrics.GetSum("apm.service.transaction.apdex", attributes, startTimestamp, timestamp)
+	transactionApdexMetric := resourceMetrics.GetSum("apm.service.transaction.apdex", attributes, true, startTimestamp, timestamp)
 	transactionApdexMetric.Add(count, startTimestamp, timestamp)
 }
