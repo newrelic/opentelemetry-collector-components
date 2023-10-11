@@ -108,8 +108,8 @@ require (
 	github.com/mostynb/go-grpc-compression v1.2.0 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
 	github.com/mwitkow/go-conntrack v0.0.0-20190716064945-2f068394615f // indirect
-	github.com/newrelic/opentelemetry-collector-components/connector/apmconnector v0.0.1-alpha // indirect
-	github.com/newrelic/opentelemetry-collector-components/processor/apmprocessor v0.0.1-alpha // indirect
+	github.com/newrelic/opentelemetry-collector-components/connector/apmconnector v0.0.1 // indirect
+	github.com/newrelic/opentelemetry-collector-components/processor/apmprocessor v0.0.1 // indirect
 	github.com/newrelic/opentelemetry-collector-components/receiver/nopreceiver v0.0.0-00010101000000-000000000000 // indirect
 	github.com/open-telemetry/opentelemetry-collector-contrib/exporter/prometheusexporter v0.82.0 // indirect
 	github.com/open-telemetry/opentelemetry-collector-contrib/exporter/prometheusremotewriteexporter v0.82.0 // indirect
