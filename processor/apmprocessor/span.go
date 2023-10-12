@@ -6,6 +6,7 @@ package apmprocessor // import "github.com/newrelic/opentelemetry-collector-comp
 import (
 	"context"
 
+	"github.com/newrelic/opentelemetry-collector-components/connector/apmconnector"
 	"go.opentelemetry.io/collector/pdata/ptrace"
 	"go.uber.org/zap"
 )
@@ -35,11 +36,19 @@ func (sp *spanProcessor) processTraces(_ context.Context, td ptrace.Traces) (ptr
 			scopeSpan := rs.ScopeSpans().At(j)
 			for k := 0; k < scopeSpan.Spans().Len(); k++ {
 				span := scopeSpan.Spans().At(k)
-				if parsedTable, parsed := sp.sqlparser.ParseDbTableFromSpan(span); parsed {
-					span.Attributes().PutStr(DbSQLTableAttributeName, parsedTable)
-					if dbSystem, dbSystemPresent := span.Attributes().Get(DbSystemAttributeName); dbSystemPresent && dbSystem.AsString() == "redis" {
-						if _, dbOperationPresent := span.Attributes().Get(DbOperationAttributeName); !dbOperationPresent {
-							span.Attributes().PutStr(DbOperationAttributeName, span.Name())
+				if span.Kind() == ptrace.SpanKindServer || span.Kind() == ptrace.SpanKindConsumer {
+					transactionName, transactionType := apmconnector.GetTransactionMetricName(span)
+					if transactionType != apmconnector.NullTransactionType {
+						span.Attributes().PutStr("transaction.type", transactionType.AsString())
+						span.Attributes().PutStr("transaction.name", transactionName)
+					}
+				} else if span.Kind() == ptrace.SpanKindClient {
+					if parsedTable, parsed := sp.sqlparser.ParseDbTableFromSpan(span); parsed {
+						span.Attributes().PutStr(DbSQLTableAttributeName, parsedTable)
+						if dbSystem, dbSystemPresent := span.Attributes().Get(DbSystemAttributeName); dbSystemPresent && dbSystem.AsString() == "redis" {
+							if _, dbOperationPresent := span.Attributes().Get(DbOperationAttributeName); !dbOperationPresent {
+								span.Attributes().PutStr(DbOperationAttributeName, span.Name())
+							}
 						}
 					}
 				}

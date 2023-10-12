@@ -36,7 +36,7 @@ func TestMutateDbSpan(t *testing.T) {
 	}
 	end := time.Now()
 	start := end.Add(-time.Second)
-	spanValues := []TestSpan{{Start: start, End: end, Name: "span", Kind: ptrace.SpanKindServer}}
+	spanValues := []TestSpan{{Start: start, End: end, Name: "span", Kind: ptrace.SpanKindClient}}
 	addSpan(scopeSpans, attrs, spanValues)
 
 	err = tp.ConsumeTraces(context.Background(), traces)
