@@ -431,6 +431,14 @@ func GetServerTransactionMetricName(attributes pcommon.Map) (string, Transaction
 	return "", NullTransactionType
 }
 
+func GetServerAddress(attributes pcommon.Map) (string, bool) {
+	serverAddress, _ := GetFirst(attributes, []string{"server.address", "net.peer.name"})
+	if serverAddress.Type() == pcommon.ValueTypeEmpty {
+		return "", false
+	}
+	return serverAddress.Str(), true
+}
+
 func GetHTTPMethod(attributes pcommon.Map) (string, bool) {
 	method, _ := GetFirst(attributes, []string{"http.request.method", "http.method"})
 	if method.Type() == pcommon.ValueTypeEmpty {
