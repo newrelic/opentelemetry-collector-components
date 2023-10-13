@@ -17,10 +17,39 @@ services:
     build:
       dockerfile: DockerPetclinic
     environment:
-      OTEL_SERVICE_NAME: "OpenTelemetry-NewRelic-APM-Demo"
-      OTEL_LOGS_EXPORTER: otlp
+      OTEL_EXPORTER_OTLP_COMPRESSION: gzip
       OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4317
+      # OTEL_EXPORTER_OTLP_METRICS_DEFAULT_HISTOGRAM_AGGREGATION: base2_exponential_bucket_histogram
+      OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE: delta
+      OTEL_LOGS_EXPORTER: otlp
+      OTEL_METRIC_EXPORT_INTERVAL: 5000
+      OTEL_TRACES_EXPORTER: logging,otlp
+      # OTEL_SEMCONV_STABILITY_OPT_IN: http
+      OTEL_SERVICE_NAME: "OpenTelemetry-NewRelic-APM-Demo"
+      OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT: 4095
+      # OTEL_TRACES_SAMPLER: "parentbased_traceidratio"
+      # OTEL_TRACES_SAMPLER_ARG: "0.02"
+      MYSQL_URL: "jdbc:mysql://mysqlserver/petclinic"
     ports:
       - "8080:8080"
     depends_on:
+      - mysqlserver
       - otel-collector
+
+  mysqlserver:
+    image: mysql:8
+    ports:
+      - "3306:3306"
+    environment:
+      - MYSQL_ROOT_PASSWORD=
+      - MYSQL_ALLOW_EMPTY_PASSWORD=true
+      - MYSQL_USER=petclinic
+      - MYSQL_PASSWORD=petclinic
+      - MYSQL_DATABASE=petclinic
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - mysql_config:/etc/mysql/conf.d
+
+volumes:
+  mysql_data:
+  mysql_config:
