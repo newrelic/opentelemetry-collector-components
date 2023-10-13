@@ -15,4 +15,7 @@ RUN ./gradlew bootJar
 # Download the otel java agent
 RUN wget https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/latest/download/opentelemetry-javaagent.jar
 
-CMD java -javaagent:opentelemetry-javaagent.jar -jar build/libs/*.jar
+CMD java -javaagent:opentelemetry-javaagent.jar \
+         -Dspring.profiles.active=mysql \
+         -Djava.security.egd=file:/dev/./urandom \
+         -jar build/libs/*.jar
