@@ -25,23 +25,7 @@ func NewMetrics() Metrics {
 	return make(Metrics)
 }
 
-func (metrics *Metrics) BuildOtelMetrics() pmetric.Metrics {
-	otelMetrics := pmetric.NewMetrics()
-	for _, rm := range *metrics {
-		resourceMetrics := otelMetrics.ResourceMetrics().AppendEmpty()
-		rm.attributes.CopyTo(resourceMetrics.Resource().Attributes())
-		for _, sm := range rm.scopeMetrics {
-			scopeMetrics := resourceMetrics.ScopeMetrics().AppendEmpty()
-			sm.origin.CopyTo(scopeMetrics.Scope())
-			for _, m := range sm.metrics {
-				addMetricToScope(*m, scopeMetrics)
-			}
-		}
-	}
-	return otelMetrics
-}
-
-func (metrics *Metrics) AppendOtelMetrics(dest pmetric.Metrics) {
+func (metrics *Metrics) AppendOtelMetrics(dest pmetric.Metrics) pmetric.Metrics {
 	otelMetrics := dest
 	for _, rm := range *metrics {
 		resourceMetrics := otelMetrics.ResourceMetrics().AppendEmpty()
@@ -54,6 +38,7 @@ func (metrics *Metrics) AppendOtelMetrics(dest pmetric.Metrics) {
 			}
 		}
 	}
+	return otelMetrics
 }
 
 func addMetricToScope(metric Metric, scopeMetrics pmetric.ScopeMetrics) {
@@ -80,6 +65,7 @@ func addMetricToScope(metric Metric, scopeMetrics pmetric.ScopeMetrics) {
 		sum.SetIsMonotonic(false)
 		otelDatapoints := sum.DataPoints()
 		for _, dp := range metric.sumDatapoints {
+			// TODO: This is a little awkward at the moment. IsMonotonic should be declared at the metric level not at the datapoint.
 			if dp.isMonotonic {
 				sum.SetAggregationTemporality(pmetric.AggregationTemporalityDelta)
 				sum.SetIsMonotonic(true)
