@@ -85,21 +85,22 @@ func checkHistogramMetric(t *testing.T, name string, value float64, metrics pmet
 	}
 }
 
-func checkSumMetric(t *testing.T, name string, value int64, metrics pmetric.MetricSlice) {
-	t.Helper()
-	found := false
-
-	for i := 0; i < metrics.Len(); i++ {
-		m := metrics.At(i)
-		if m.Name() == name {
-			dp := m.Sum().DataPoints().At(0)
-			assert.Equal(t, value, dp.IntValue())
-			found = true
-			break
-		}
-	}
-
-	if !found {
-		assert.Fail(t, fmt.Sprintf("Could not find metric %s", name))
-	}
-}
+// TODO: Uncomment the following when it's used again...
+//func checkSumMetric(t *testing.T, name string, value int64, metrics pmetric.MetricSlice) {
+//	t.Helper()
+//	found := false
+//
+//	for i := 0; i < metrics.Len(); i++ {
+//		m := metrics.At(i)
+//		if m.Name() == name {
+//			dp := m.Sum().DataPoints().At(0)
+//			assert.Equal(t, value, dp.IntValue())
+//			found = true
+//			break
+//		}
+//	}
+//
+//	if !found {
+//		assert.Fail(t, fmt.Sprintf("Could not find metric %s", name))
+//	}
+//}
