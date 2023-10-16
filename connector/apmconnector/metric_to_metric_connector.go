@@ -139,7 +139,7 @@ func recordTransactionMetrics(logger *zap.Logger, m pmetric.Metric, metrics *Res
 			newDp.Attributes().PutStr("transactionName", name)
 			newDp.Attributes().PutStr("metricTimesliceName", name)
 
-			isError := ContainsErrorHttpStatusCode(dp.Attributes())
+			isError := ContainsErrorHTTPStatusCode(dp.Attributes())
 			if isError {
 				{
 					attributes := pcommon.NewMap()
@@ -186,7 +186,7 @@ func recordTransactionMetrics(logger *zap.Logger, m pmetric.Metric, metrics *Res
 			newDp.Attributes().PutStr("transactionName", name)
 			newDp.Attributes().PutStr("metricTimesliceName", name)
 
-			isError := ContainsErrorHttpStatusCode(dp.Attributes())
+			isError := ContainsErrorHTTPStatusCode(dp.Attributes())
 			if isError {
 				{
 					attributes := pcommon.NewMap()

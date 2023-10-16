@@ -378,7 +378,7 @@ func (measurement Measurement) ExclusiveTime(transaction *Transaction) int64 {
 func GetTransactionMetricNameFromAttributes(p pcommon.Map) (string, TransactionType) {
 	name, txType := GetServerTransactionMetricName(p)
 	if txType == NullTransactionType {
-		return fmt.Sprintf("WebTransaction/Other/Unknown"), WebTransactionType
+		return "WebTransaction/Other/Unknown", WebTransactionType
 	}
 	return name, txType
 }

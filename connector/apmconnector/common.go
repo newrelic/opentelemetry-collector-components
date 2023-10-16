@@ -18,7 +18,7 @@ func ShouldProcess(logger *zap.Logger, rs pcommon.Resource) bool {
 	return true
 }
 
-func ContainsErrorHttpStatusCode(attributes pcommon.Map) bool {
+func ContainsErrorHTTPStatusCode(attributes pcommon.Map) bool {
 	statusCodeValue, statusCodeKey := GetFirst(attributes, []string{"http.request.status_code", "http.status_code"})
 	if statusCodeKey != "" && statusCodeValue.Type() == pcommon.ValueTypeInt {
 		return statusCodeValue.Int() >= 500
@@ -38,14 +38,14 @@ func GetApdexFromExplicitHistogramBounds(bounds []float64, bucketCounts []uint64
 		tolerating = tolerating * 1000
 	}
 
-	var s uint64 = 0
-	var t uint64 = 0
-	var f uint64 = 0
+	var s uint64
+	var t uint64
+	var f uint64
 
 	for i := 0; i < len(bucketCounts); i++ {
 		count := bucketCounts[i]
 
-		upper := math.Inf(1)
+		var upper float64
 		if i < len(bucketCounts)-1 {
 			upper = bounds[i]
 		} else {
