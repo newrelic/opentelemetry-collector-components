@@ -131,18 +131,19 @@ func (rm *ResourceMetrics) IncrementSum(metricName string, attributes pcommon.Ma
 	sum.Add(1, startTimestamp, endTimestamp)
 }
 
-func (rm *ResourceMetrics) GetSum(metricName string, attributes pcommon.Map, isMonotonic bool, startTimestamp pcommon.Timestamp, endTimestamp pcommon.Timestamp) *SumDatapoint {
+func (rm *ResourceMetrics) GetSum(metricName string, attributes pcommon.Map, isMonotonic bool, startTimestamp pcommon.Timestamp, endTimestamp pcommon.Timestamp) SumDatapoint {
 	scopeMetrics := rm.GetOrCreateScope(pcommon.NewInstrumentationScope())
 	metric := scopeMetrics.GetOrCreateMetric(metricName)
 	return metric.GetSum(attributes, isMonotonic, startTimestamp, endTimestamp)
 }
 
-func (m *Metric) GetSum(attributes pcommon.Map, isMonotonic bool, startTimestamp pcommon.Timestamp, endTimestamp pcommon.Timestamp) *SumDatapoint {
+func (m *Metric) GetSum(attributes pcommon.Map, isMonotonic bool, startTimestamp pcommon.Timestamp, endTimestamp pcommon.Timestamp) SumDatapoint {
 	dp, dpPresent := m.sumDatapoints[getKeyFromMap(attributes)]
 	if !dpPresent {
-		dp = &SumDatapoint{value: 0, attributes: attributes, isMonotonic: isMonotonic, startTimestamp: startTimestamp, timestamp: endTimestamp}
+		dp = SumDatapoint{value: 0, attributes: attributes, isMonotonic: isMonotonic, startTimestamp: startTimestamp, timestamp: endTimestamp}
 		m.sumDatapoints[getKeyFromMap(attributes)] = dp
 	}
+	m.sumDatapoints[getKeyFromMap(attributes)] = dp
 	return dp
 }
 
@@ -168,16 +169,16 @@ func (sm *ScopeMetrics) GetOrCreateMetric(metricName string) *Metric {
 	}
 	metric = &Metric{
 		metricName:          metricName,
-		histogramDatapoints: make(map[string]*HistogramDatapoint),
-		sumDatapoints:       make(map[string]*SumDatapoint),
+		histogramDatapoints: make(map[string]HistogramDatapoint),
+		sumDatapoints:       make(map[string]SumDatapoint),
 	}
 	sm.metrics[metricName] = metric
 	return metric
 }
 
 type Metric struct {
-	histogramDatapoints map[string]*HistogramDatapoint
-	sumDatapoints       map[string]*SumDatapoint
+	histogramDatapoints map[string]HistogramDatapoint
+	sumDatapoints       map[string]SumDatapoint
 	metricName          string
 	unit                string
 }
@@ -186,7 +187,7 @@ func (m *Metric) AddHistogramDatapoint(attributes pcommon.Map, startTimestamp pc
 	dp, dpPresent := m.histogramDatapoints[getKeyFromMap(attributes)]
 	if !dpPresent {
 		histogram := NewHistogram()
-		dp = &HistogramDatapoint{histogram: histogram, attributes: attributes, startTimestamp: startTimestamp, timestamp: endTimestamp}
+		dp = HistogramDatapoint{histogram: histogram, attributes: attributes, startTimestamp: startTimestamp, timestamp: endTimestamp}
 	}
 	dp.histogram.Update(value)
 	if dp.startTimestamp.AsTime().After(startTimestamp.AsTime()) {
@@ -201,7 +202,7 @@ func (m *Metric) AddHistogramDatapoint(attributes pcommon.Map, startTimestamp pc
 func (m *Metric) IncrementSumDatapoint(attributes pcommon.Map, startTimestamp pcommon.Timestamp, endTimestamp pcommon.Timestamp) {
 	dp, dpPresent := m.sumDatapoints[getKeyFromMap(attributes)]
 	if !dpPresent {
-		dp = &SumDatapoint{value: 0, attributes: attributes, startTimestamp: startTimestamp, timestamp: endTimestamp}
+		dp = SumDatapoint{value: 0, attributes: attributes, startTimestamp: startTimestamp, timestamp: endTimestamp}
 	}
 	dp.value++
 	if dp.startTimestamp.AsTime().After(startTimestamp.AsTime()) {
