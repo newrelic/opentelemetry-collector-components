@@ -39,6 +39,8 @@ services:
     image: mysql:8
     ports:
       - "3306:3306"
+    cap_add:
+      - NET_ADMIN
     environment:
       - MYSQL_ROOT_PASSWORD=
       - MYSQL_ALLOW_EMPTY_PASSWORD=true
