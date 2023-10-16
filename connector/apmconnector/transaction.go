@@ -229,7 +229,7 @@ func (transaction *Transaction) ProcessExternalSpan(span ptrace.Span) bool {
 			}
 		}
 		timesliceName := fmt.Sprintf("External/%s/all", serverAddress.AsString())
-		measurement := Measurement{SpanID: span.SpanID().String(), MetricName: "apm.service.external.host.duration", Span: span,
+		measurement := Measurement{SpanID: span.SpanID().String(), MetricName: "apm.service.transaction.external.host.duration", Span: span,
 			DurationNanos: DurationInNanos(span), Attributes: attributes, SegmentNameProvider: segmentNameProvider, MetricTimesliceName: timesliceName}
 
 		transaction.AddMeasurement(&measurement)
@@ -264,6 +264,8 @@ func (transaction *Transaction) ProcessRootSpan() bool {
 		return true
 	}
 
+	// TODO: Error count and Apdex are calculated from metrics now. Though, the plan is to bring the following code
+	// back for languages like Ruby that do not yet generate metric data.
 	//err := span.Status().Code() == ptrace.StatusCodeError
 	//if err {
 	//	transaction.IncrementErrorCount(transactionName, transactionType, span.StartTimestamp(), span.EndTimestamp())
@@ -298,6 +300,8 @@ func (transaction *Transaction) ProcessRootSpan() bool {
 		attributes.PutStr("transactionName", transactionName)
 		attributes.PutStr("metricTimesliceName", transactionName)
 
+		// TODO: Transaction duration is now calculated from metrics. Though, the plan is to bring the following code
+		// back for languages like Ruby that do not yet generate metric data.
 		// transaction.resourceMetrics.AddHistogramFromSpan("apm.service.transaction.duration", attributes, span)
 
 		if remainingNanos > 0 {
