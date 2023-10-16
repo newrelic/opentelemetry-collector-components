@@ -4,9 +4,10 @@
 package apmconnector // import "github.com/newrelic/opentelemetry-collector-components/connector/apmconnector"
 
 import (
+	"math"
+
 	"go.opentelemetry.io/collector/pdata/pcommon"
 	"go.uber.org/zap"
-	"math"
 )
 
 func ShouldProcess(logger *zap.Logger, rs pcommon.Resource) bool {
