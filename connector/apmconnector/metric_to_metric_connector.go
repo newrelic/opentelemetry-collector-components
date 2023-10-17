@@ -63,10 +63,10 @@ func ConvertMetrics(logger *zap.Logger, config *Config, md pmetric.Metrics) pmet
 			for k := 0; k < sm.Metrics().Len(); k++ {
 				m := sm.Metrics().At(k)
 
-				if m.Name() == "http.server.duration" || m.Name() == "http.server.request.duration" {
+				if isResponseTimeMetric(m.Name()) {
 					rmNew, smNew, metrics = createResourceAndScopeMetrics(logger, rmNew, attributesFilter, rm, newMetrics, metrics, metricMap, smNew)
 					recordTransactionMetrics(logger, m, metrics, apdex, smNew)
-				} else if m.Name() == "http.client.duration" || m.Name() == "http.client.request.duration" {
+				} else if isExternalCallMetric(m.Name()) {
 					rmNew, smNew, metrics = createResourceAndScopeMetrics(logger, rmNew, attributesFilter, rm, newMetrics, metrics, metricMap, smNew)
 					recordExternalHostDurationMetric(logger, m, smNew)
 				}
@@ -79,6 +79,20 @@ func ConvertMetrics(logger *zap.Logger, config *Config, md pmetric.Metrics) pmet
 	}
 
 	return newMetrics
+}
+
+func isResponseTimeMetric(metricName string) bool {
+	// http.server.duration will be deprecated in the near future in favor of http.server.request.duration
+	return metricName == "http.server.request.duration" ||
+		metricName == "http.server.duration" ||
+		metricName == "rpc.server.duration"
+}
+
+func isExternalCallMetric(metricName string) bool {
+	// http.client.duration will be deprecated in the near future in favor of http.client.request.duration
+	return metricName == "http.client.request.duration" ||
+		metricName == "http.client.duration" ||
+		metricName == "rpc.client.duration"
 }
 
 func recordExternalHostDurationMetric(logger *zap.Logger, m pmetric.Metric, smNew pmetric.ScopeMetrics) {
@@ -117,6 +131,9 @@ func recordExternalHostDurationMetric(logger *zap.Logger, m pmetric.Metric, smNe
 		newMetric.ExponentialHistogram().SetAggregationTemporality(m.ExponentialHistogram().AggregationTemporality())
 		newMetric.CopyTo(smNew.Metrics().AppendEmpty())
 	default:
+		// This should not occur. All the metrics we're deriving from should be histograms.
+		// http.client.request.duration: https://github.com/open-telemetry/semantic-conventions/blob/main/docs/http/http-metrics.md#metric-httpclientrequestduration
+		// rpc.client.duration: https://github.com/open-telemetry/semantic-conventions/blob/main/docs/rpc/rpc-metrics.md#metric-rpcclientduration
 		logger.Error("unexpected metric type", zap.String("name", m.Name()), zap.String("type", metricType.String()))
 	}
 }
@@ -211,6 +228,9 @@ func recordTransactionMetrics(logger *zap.Logger, m pmetric.Metric, metrics *Res
 		newMetric.ExponentialHistogram().SetAggregationTemporality(m.ExponentialHistogram().AggregationTemporality())
 		newMetric.CopyTo(smNew.Metrics().AppendEmpty())
 	default:
+		// This should not occur. All the metrics we're deriving from should be histograms.
+		// http.server.request.duration: https://github.com/open-telemetry/semantic-conventions/blob/main/docs/http/http-metrics.md#metric-httpserverrequestduration
+		// rpc.server.duration: https://github.com/open-telemetry/semantic-conventions/blob/main/docs/rpc/rpc-metrics.md#metric-rpcserverduration
 		logger.Error("unexpected metric type", zap.String("name", m.Name()), zap.String("type", metricType.String()))
 	}
 }
