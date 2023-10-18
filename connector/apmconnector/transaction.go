@@ -229,7 +229,7 @@ func (transaction *Transaction) ProcessExternalSpan(span ptrace.Span) bool {
 			}
 		}
 		timesliceName := fmt.Sprintf("External/%s/all", serverAddress.AsString())
-		measurement := Measurement{SpanID: span.SpanID().String(), MetricName: "apm.service.external.host.duration", Span: span,
+		measurement := Measurement{SpanID: span.SpanID().String(), MetricName: "apm.service.transaction.external.host.duration", Span: span,
 			DurationNanos: DurationInNanos(span), Attributes: attributes, SegmentNameProvider: segmentNameProvider, MetricTimesliceName: timesliceName}
 
 		transaction.AddMeasurement(&measurement)
@@ -264,12 +264,14 @@ func (transaction *Transaction) ProcessRootSpan() bool {
 		return true
 	}
 
-	err := span.Status().Code() == ptrace.StatusCodeError
-	if err {
-		transaction.IncrementErrorCount(transactionName, transactionType, span.StartTimestamp(), span.EndTimestamp())
-	}
-
-	transaction.GenerateApdexMetrics(span, err, transactionName, transactionType)
+	// TODO: Error count and Apdex are calculated from metrics now. Though, the plan is to bring the following code
+	// back for languages like Ruby that do not yet generate metric data.
+	//err := span.Status().Code() == ptrace.StatusCodeError
+	//if err {
+	//	transaction.IncrementErrorCount(transactionName, transactionType, span.StartTimestamp(), span.EndTimestamp())
+	//}
+	//
+	//transaction.GenerateApdexMetrics(span, err, transactionName, transactionType)
 
 	breakdownBySegment := make(map[string]int64)
 	totalBreakdownNanos := int64(0)
@@ -298,7 +300,9 @@ func (transaction *Transaction) ProcessRootSpan() bool {
 		attributes.PutStr("transactionName", transactionName)
 		attributes.PutStr("metricTimesliceName", transactionName)
 
-		transaction.resourceMetrics.AddHistogramFromSpan("apm.service.transaction.duration", attributes, span)
+		// TODO: Transaction duration is now calculated from metrics. Though, the plan is to bring the following code
+		// back for languages like Ruby that do not yet generate metric data.
+		// transaction.resourceMetrics.AddHistogramFromSpan("apm.service.transaction.duration", attributes, span)
 
 		if remainingNanos > 0 {
 			// FIXME this is already in the map
@@ -371,6 +375,14 @@ func (measurement Measurement) ExclusiveTime(transaction *Transaction) int64 {
 	return measurement.DurationNanos - childDurationNanos
 }
 
+func GetTransactionMetricNameFromAttributes(p pcommon.Map) (string, TransactionType) {
+	name, txType := GetServerTransactionMetricName(p)
+	if txType == NullTransactionType {
+		return "WebTransaction/Other/Unknown", WebTransactionType
+	}
+	return name, txType
+}
+
 func GetTransactionMetricName(span ptrace.Span) (string, TransactionType) {
 	if span.Kind() == ptrace.SpanKindConsumer {
 		return GetConsumerTransactionMetricName(span.Attributes())
@@ -421,6 +433,14 @@ func GetServerTransactionMetricName(attributes pcommon.Map) (string, Transaction
 		return fmt.Sprintf("WebTransaction/http.method/%s", method), WebTransactionType
 	}
 	return "", NullTransactionType
+}
+
+func GetServerAddress(attributes pcommon.Map) (string, bool) {
+	serverAddress, _ := GetFirst(attributes, []string{"server.address", "net.peer.name"})
+	if serverAddress.Type() == pcommon.ValueTypeEmpty {
+		return "", false
+	}
+	return serverAddress.Str(), true
 }
 
 func GetHTTPMethod(attributes pcommon.Map) (string, bool) {

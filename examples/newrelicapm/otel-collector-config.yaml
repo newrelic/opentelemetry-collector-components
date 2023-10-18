@@ -22,16 +22,20 @@ exporters:
 
 connectors:
   newrelicapm:
+  newrelicapm/metrics:
 
 service:
   pipelines:
     traces:
       receivers: [otlp]
       processors: [newrelicapm, batch]
-      exporters: [newrelicapm, otlp, logging]
+      exporters: [newrelicapm, otlp]
     metrics:
       receivers: [otlp, newrelicapm]
       processors: [batch]
+      exporters: [otlp, newrelicapm/metrics]
+    metrics/apm:
+      receivers: [newrelicapm/metrics]
       exporters: [otlp]
     logs:
       receivers: [otlp, newrelicapm]

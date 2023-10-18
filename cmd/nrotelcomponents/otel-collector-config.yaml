@@ -20,6 +20,7 @@ exporters:
 
 connectors:
   newrelicapm:
+  newrelicapm/metrics:
 
 service:
   pipelines:
@@ -30,6 +31,9 @@ service:
     metrics:
       receivers: [otlp, newrelicapm]
       processors: [batch]
+      exporters: [otlp, newrelicapm/metrics]
+    metrics/apm:
+      receivers: [newrelicapm/metrics]
       exporters: [otlp]
     logs:
       receivers: [otlp, newrelicapm]

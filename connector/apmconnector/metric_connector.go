@@ -81,5 +81,5 @@ func ConvertTraces(logger *zap.Logger, config *Config, td ptrace.Traces) pmetric
 
 	transactions.ProcessTransactions()
 
-	return metricMap.BuildOtelMetrics()
+	return metricMap.AppendOtelMetrics(pmetric.NewMetrics())
 }

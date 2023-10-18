@@ -26,8 +26,8 @@ services:
       # OTEL_SEMCONV_STABILITY_OPT_IN: http
       OTEL_SERVICE_NAME: "OpenTelemetry-NewRelic-APM-Demo"
       OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT: 4095
-      # OTEL_TRACES_SAMPLER: "parentbased_traceidratio"
-      # OTEL_TRACES_SAMPLER_ARG: "0.02"
+      OTEL_TRACES_SAMPLER: "parentbased_traceidratio"
+      OTEL_TRACES_SAMPLER_ARG: "0.02"
       MYSQL_URL: "jdbc:mysql://mysqlserver/petclinic"
     ports:
       - "8080:8080"

@@ -25,8 +25,8 @@ func NewMetrics() Metrics {
 	return make(Metrics)
 }
 
-func (metrics *Metrics) BuildOtelMetrics() pmetric.Metrics {
-	otelMetrics := pmetric.NewMetrics()
+func (metrics *Metrics) AppendOtelMetrics(dest pmetric.Metrics) pmetric.Metrics {
+	otelMetrics := dest
 	for _, rm := range *metrics {
 		resourceMetrics := otelMetrics.ResourceMetrics().AppendEmpty()
 		rm.attributes.CopyTo(resourceMetrics.Resource().Attributes())
@@ -65,6 +65,11 @@ func addMetricToScope(metric Metric, scopeMetrics pmetric.ScopeMetrics) {
 		sum.SetIsMonotonic(false)
 		otelDatapoints := sum.DataPoints()
 		for _, dp := range metric.sumDatapoints {
+			// TODO: This is a little awkward at the moment. IsMonotonic should be declared at the metric level not at the datapoint.
+			if dp.isMonotonic {
+				sum.SetAggregationTemporality(pmetric.AggregationTemporalityDelta)
+				sum.SetIsMonotonic(true)
+			}
 			sumDp := otelDatapoints.AppendEmpty()
 			sumDp.SetTimestamp(dp.timestamp)
 			sumDp.SetStartTimestamp(dp.startTimestamp)
@@ -122,7 +127,34 @@ func (rm *ResourceMetrics) AddHistogramFromSpan(metricName string, attributes pc
 func (rm *ResourceMetrics) IncrementSum(metricName string, attributes pcommon.Map, startTimestamp pcommon.Timestamp, endTimestamp pcommon.Timestamp) {
 	scopeMetrics := rm.GetOrCreateScope(pcommon.NewInstrumentationScope())
 	metric := scopeMetrics.GetOrCreateMetric(metricName)
-	metric.IncrementSumDatapoint(attributes, startTimestamp, endTimestamp)
+	sum := metric.GetSum(attributes, false, startTimestamp, endTimestamp)
+	sum.Add(1, startTimestamp, endTimestamp)
+}
+
+func (rm *ResourceMetrics) GetSum(metricName string, attributes pcommon.Map, isMonotonic bool, startTimestamp pcommon.Timestamp, endTimestamp pcommon.Timestamp) SumDatapoint {
+	scopeMetrics := rm.GetOrCreateScope(pcommon.NewInstrumentationScope())
+	metric := scopeMetrics.GetOrCreateMetric(metricName)
+	return metric.GetSum(attributes, isMonotonic, startTimestamp, endTimestamp)
+}
+
+func (m *Metric) GetSum(attributes pcommon.Map, isMonotonic bool, startTimestamp pcommon.Timestamp, endTimestamp pcommon.Timestamp) SumDatapoint {
+	dp, dpPresent := m.sumDatapoints[getKeyFromMap(attributes)]
+	if !dpPresent {
+		dp = SumDatapoint{value: 0, attributes: attributes, isMonotonic: isMonotonic, startTimestamp: startTimestamp, timestamp: endTimestamp}
+		m.sumDatapoints[getKeyFromMap(attributes)] = dp
+	}
+	m.sumDatapoints[getKeyFromMap(attributes)] = dp
+	return dp
+}
+
+func (m *SumDatapoint) Add(value int64, startTimestamp pcommon.Timestamp, endTimestamp pcommon.Timestamp) {
+	m.value += value
+	if m.startTimestamp.AsTime().After(startTimestamp.AsTime()) {
+		m.startTimestamp = startTimestamp
+	}
+	if m.timestamp.AsTime().Before(endTimestamp.AsTime()) {
+		m.timestamp = endTimestamp
+	}
 }
 
 type ScopeMetrics struct {
@@ -198,6 +230,7 @@ type SumDatapoint struct {
 	attributes     pcommon.Map
 	startTimestamp pcommon.Timestamp
 	timestamp      pcommon.Timestamp
+	isMonotonic    bool
 }
 
 func getKeyFromMap(pMap pcommon.Map) string {

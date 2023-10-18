@@ -32,15 +32,17 @@ func TestConvertOneSpanToMetrics(t *testing.T) {
 	logger, _ := zap.NewDevelopment()
 	config := Config{ApdexT: 0.5}
 	metrics := ConvertTraces(logger, &config, traces)
-	assert.Equal(t, 5, metrics.MetricCount())
+	assert.Equal(t, 2, metrics.MetricCount())
 	rm := metrics.ResourceMetrics().At(0)
 	serviceName, _ := rm.Resource().Attributes().Get("service.name")
 	assert.Equal(t, "service", serviceName.AsString())
 	sm := rm.ScopeMetrics().At(0)
-	checkSumMetric(t, "apm.service.transaction.apdex", 1, sm.Metrics())
-	checkSumMetric(t, "apm.service.apdex", 1, sm.Metrics())
+
+	// TODO: The commented out metrics will be generated when we generate them from spans for languages like Ruby
+	// checkSumMetric(t, "apm.service.transaction.apdex", 1, sm.Metrics())
+	// checkSumMetric(t, "apm.service.apdex", 1, sm.Metrics())
 	checkHistogramMetric(t, "apm.service.overview.web", 1, sm.Metrics())
-	checkHistogramMetric(t, "apm.service.transaction.duration", 1, sm.Metrics())
+	// checkHistogramMetric(t, "apm.service.transaction.duration", 1, sm.Metrics())
 	checkHistogramMetric(t, "apm.service.transaction.overview", 1, sm.Metrics())
 }
 
@@ -83,21 +85,22 @@ func checkHistogramMetric(t *testing.T, name string, value float64, metrics pmet
 	}
 }
 
-func checkSumMetric(t *testing.T, name string, value int64, metrics pmetric.MetricSlice) {
-	t.Helper()
-	found := false
-
-	for i := 0; i < metrics.Len(); i++ {
-		m := metrics.At(i)
-		if m.Name() == name {
-			dp := m.Sum().DataPoints().At(0)
-			assert.Equal(t, value, dp.IntValue())
-			found = true
-			break
-		}
-	}
-
-	if !found {
-		assert.Fail(t, fmt.Sprintf("Could not find metric %s", name))
-	}
-}
+// TODO: Uncomment the following when it's used again...
+//func checkSumMetric(t *testing.T, name string, value int64, metrics pmetric.MetricSlice) {
+//	t.Helper()
+//	found := false
+//
+//	for i := 0; i < metrics.Len(); i++ {
+//		m := metrics.At(i)
+//		if m.Name() == name {
+//			dp := m.Sum().DataPoints().At(0)
+//			assert.Equal(t, value, dp.IntValue())
+//			found = true
+//			break
+//		}
+//	}
+//
+//	if !found {
+//		assert.Fail(t, fmt.Sprintf("Could not find metric %s", name))
+//	}
+//}
