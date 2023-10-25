@@ -303,6 +303,7 @@ func (transaction *Transaction) ProcessRootSpan() bool {
 		// TODO: Transaction duration is now calculated from metrics. Though, the plan is to bring the following code
 		// back for languages like Ruby that do not yet generate metric data.
 		// transaction.resourceMetrics.AddHistogramFromSpan("apm.service.transaction.duration", attributes, span)
+		transaction.resourceMetrics.AddHistogramFromSpan("apm.service.transaction.sampled_duration", attributes, span)
 
 		if remainingNanos > 0 {
 			// FIXME this is already in the map
