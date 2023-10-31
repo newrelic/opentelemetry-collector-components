@@ -82,13 +82,6 @@ func ConvertMetrics(logger *zap.Logger, config *Config, md pmetric.Metrics) pmet
 	return newMetrics
 }
 
-func getConversionFactorToSeconds(unit string) float64 {
-	if unit == "ms" {
-		return .001
-	}
-	return 1
-}
-
 func isResponseTimeMetric(metricName string) bool {
 	// http.server.duration will be deprecated in the near future in favor of http.server.request.duration
 	return metricName == "http.server.request.duration" ||
@@ -107,14 +100,7 @@ func recordExternalHostDurationMetric(logger *zap.Logger, m pmetric.Metric, smNe
 	newMetric := pmetric.NewMetric()
 	newMetric.SetName("apm.service.external.host.duration")
 	newMetric.SetDescription("Duration of external calls")
-
-	unit := "s"
-	conversionFactor := getConversionFactorToSeconds(unit)
-	if m.Unit() != "s" || m.Unit() != "ms" {
-		logger.Warn("unexpected unit")
-		unit = m.Unit()
-	}
-	newMetric.SetUnit(unit)
+	conversionFactor := setUnitAndComputeConversionFactor(newMetric, m.Unit())
 
 	switch metricType := m.Type(); metricType {
 	case pmetric.MetricTypeHistogram:
@@ -159,14 +145,7 @@ func recordTransactionMetrics(logger *zap.Logger, m pmetric.Metric, metrics *Res
 	newMetric := pmetric.NewMetric()
 	newMetric.SetName("apm.service.transaction.duration")
 	newMetric.SetDescription("Duration of the transaction")
-
-	unit := "s"
-	conversionFactor := getConversionFactorToSeconds(m.Unit())
-	if m.Unit() != "s" && m.Unit() != "ms" {
-		logger.Warn("unexpected unit")
-		unit = m.Unit()
-	}
-	newMetric.SetUnit(unit)
+	conversionFactor := setUnitAndComputeConversionFactor(newMetric, m.Unit())
 
 	switch metricType := m.Type(); metricType {
 	case pmetric.MetricTypeHistogram:
@@ -258,6 +237,16 @@ func recordTransactionMetrics(logger *zap.Logger, m pmetric.Metric, metrics *Res
 		// http.server.request.duration: https://github.com/open-telemetry/semantic-conventions/blob/main/docs/http/http-metrics.md#metric-httpserverrequestduration
 		// rpc.server.duration: https://github.com/open-telemetry/semantic-conventions/blob/main/docs/rpc/rpc-metrics.md#metric-rpcserverduration
 		logger.Error("unexpected metric type", zap.String("name", m.Name()), zap.String("type", metricType.String()))
+	}
+}
+
+func setUnitAndComputeConversionFactor(m pmetric.Metric, unit string) float64 {
+	if unit != "ms" {
+		m.SetUnit(unit)
+		return 1.0
+	} else {
+		m.SetUnit("s")
+		return .001
 	}
 }
 
