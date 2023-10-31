@@ -85,9 +85,8 @@ func ConvertMetrics(logger *zap.Logger, config *Config, md pmetric.Metrics) pmet
 func getConversionFactorToSeconds(unit string) float64 {
 	if unit == "ms" {
 		return .001
-	} else {
-		return 1
 	}
+	return 1
 }
 
 func isResponseTimeMetric(metricName string) bool {
@@ -355,25 +354,11 @@ func convertUnitsExponentialHistogramDataPoint(dp pmetric.ExponentialHistogramDa
 
 	newCounts := make([]uint64, numBuckets)
 	for i, count := range dp.Positive().BucketCounts().AsRaw() {
-		// This may be too naive an approach
+		// This is a naive approach but should be good enough for this prototype.
+		// The original bucket boundaries will not perfectly align with the new bucket boundaries, so
+		// a more accurate approach would be to distribute the count proportionally across the appropriate
+		// buckets.
 		newCounts[i] = count
-
-		// Might require doing something more sophisticated. Something like the following is a rough
-		// cut at what it might look like to apply a proportion of the count to the current index and
-		// the remainder to index+1.
-		// Though, need to explore this with unit tests a bit to understand what's most correct.
-
-		// lower := lowerBoundary(orgScale, i+orgOffset) * conversionFactor
-		// upper := lowerBoundary(orgScale, i+orgOffset+1) * conversionFactor
-		// lowerMapped := mapToIndex(newScale, lower)
-		// upperMapped := mapToIndex(newScale, upper)
-		// if lowerMapped == upperMapped || i+1 == len(newCounts) {
-		// 	   newCounts[i] += count
-		// } else {
-		// 	   half := count / 2
-		// 	   newCounts[i] += half
-		// 	   newCounts[i+1] += count - half
-		// }
 	}
 
 	dp.SetScale(int32(newScale))
@@ -386,15 +371,6 @@ func mapToIndex(scale int, value float64) int {
 	// https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/metrics/data-model.md#negative-scale-extract-and-shift-the-exponent
 	scaleFactor := math.Ldexp(math.Log2E, scale)
 	return int(math.Ceil(math.Log(value)*scaleFactor) - 1)
-}
-
-func lowerBoundary(scale int, index int) float64 {
-	if scale > 0 {
-		inverseFactor := math.Ldexp(math.Ln2, -scale)
-		return math.Exp(float64(index) * inverseFactor)
-	} else {
-		return math.Ldexp(1, index<<-scale)
-	}
 }
 
 func generateApdexMetrics(apdex Apdex, zone string, resourceMetrics *ResourceMetrics, startTimestamp pcommon.Timestamp, timestamp pcommon.Timestamp, count int64, transactionName string) {
