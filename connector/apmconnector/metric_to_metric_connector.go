@@ -244,10 +244,9 @@ func setUnitAndComputeConversionFactor(m pmetric.Metric, unit string) float64 {
 	if unit != "ms" {
 		m.SetUnit(unit)
 		return 1.0
-	} else {
-		m.SetUnit("s")
-		return .001
 	}
+	m.SetUnit("s")
+	return .001
 }
 
 func createResourceAndScopeMetrics(logger *zap.Logger, rmNew pmetric.ResourceMetrics, attributesFilter *AttributeFilter, rm pmetric.ResourceMetrics, newMetrics pmetric.Metrics, metrics *ResourceMetrics, metricMap Metrics, smNew pmetric.ScopeMetrics) (pmetric.ResourceMetrics, pmetric.ScopeMetrics, *ResourceMetrics) {
