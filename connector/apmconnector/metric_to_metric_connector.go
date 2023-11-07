@@ -241,6 +241,14 @@ func recordTransactionMetrics(logger *zap.Logger, m pmetric.Metric, metrics *Res
 }
 
 func setUnitAndComputeConversionFactor(m pmetric.Metric, unit string) float64 {
+	// The unit conversion we're doing here in the collector is temporary.
+	// A proper NRQL convert function is currently in staging. When it becomes available,
+	// we will remove the unit conversion logic from the collector.
+	// For now, we're keeping it simple. We only support converting milliseconds to seconds.
+	// The http.*.duration metrics were previously reported in milliseconds.
+	// With the new stable conventions, they are reported in seconds. Therefore, this unit
+	// conversion is necessary for users using the old instrumentation or instrumentation
+	// that has not yet been updated to use the stable conventions.
 	if unit != "ms" {
 		m.SetUnit(unit)
 		return 1.0
