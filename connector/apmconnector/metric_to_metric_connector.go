@@ -124,8 +124,8 @@ func recordExternalHostDurationMetric(logger *zap.Logger, m pmetric.Metric, smNe
 			dp := m.ExponentialHistogram().DataPoints().At(i)
 			if serverAddress, hasServerAddress := GetServerAddress(dp.Attributes()); hasServerAddress {
 				newDp := newMetric.ExponentialHistogram().DataPoints().AppendEmpty()
-				convertUnitsExponentialHistogramDataPoint(newDp, conversionFactor)
 				dp.CopyTo(newDp)
+				convertUnitsExponentialHistogramDataPoint(newDp, conversionFactor)
 				newDp.Attributes().PutStr("server.address", serverAddress)
 				newDp.Attributes().PutStr("external.host", serverAddress)
 				newDp.Attributes().PutStr("metricTimesliceName", fmt.Sprintf("External/%s/all", serverAddress))
