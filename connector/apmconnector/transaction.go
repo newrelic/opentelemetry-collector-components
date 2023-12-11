@@ -352,12 +352,13 @@ func (transaction *Transaction) ProcessMeasurement(measurement *Measurement, tra
 	measurement.Attributes.PutStr("transactionType", transactionType.AsString())
 	//measurement.Attributes.PutStr("scope", transactionName)
 
-	//transaction.resourceMetrics.AddHistogramFromSpan(measurement.MetricName, measurement.Attributes, measurement.Span)
+	if measurement.MetricName != "newrelic.timeslice.value" {
+		transaction.resourceMetrics.AddHistogramFromSpan(measurement.MetricName, measurement.Attributes, measurement.Span)
+	}
 
 	{
 		attributes := pcommon.NewMap()
 		measurement.Attributes.CopyTo(attributes)
-		// we might not need transactionName here..
 		attributes.PutStr("transactionName", transactionName)
 
 		transaction.resourceMetrics.AddHistogram("apm.service.transaction.overview", attributes,
