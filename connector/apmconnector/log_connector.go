@@ -24,8 +24,9 @@ func (c *ApmLogConnector) Capabilities() consumer.Capabilities {
 }
 
 func (c *ApmLogConnector) ConsumeTraces(ctx context.Context, td ptrace.Traces) error {
-	logs := BuildTransactions(c.logger, td)
-	return c.logsConsumer.ConsumeLogs(ctx, logs)
+	//logs := BuildTransactions(c.logger, td)
+	//return c.logsConsumer.ConsumeLogs(ctx, logs)
+	return nil
 }
 
 func (c *ApmLogConnector) Start(_ context.Context, _ component.Host) error {

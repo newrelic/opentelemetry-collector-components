@@ -350,9 +350,9 @@ func (transaction *Transaction) IncrementErrorCount(transactionName string, tran
 
 func (transaction *Transaction) ProcessMeasurement(measurement *Measurement, transactionType TransactionType, transactionName string) {
 	measurement.Attributes.PutStr("transactionType", transactionType.AsString())
-	measurement.Attributes.PutStr("scope", transactionName)
+	//measurement.Attributes.PutStr("scope", transactionName)
 
-	transaction.resourceMetrics.AddHistogramFromSpan(measurement.MetricName, measurement.Attributes, measurement.Span)
+	//transaction.resourceMetrics.AddHistogramFromSpan(measurement.MetricName, measurement.Attributes, measurement.Span)
 
 	{
 		attributes := pcommon.NewMap()
