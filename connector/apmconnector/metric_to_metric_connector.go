@@ -6,8 +6,6 @@ package apmconnector // import "github.com/newrelic/opentelemetry-collector-comp
 import (
 	"context"
 	"fmt"
-	"math"
-
 	"go.opentelemetry.io/collector/component"
 	"go.opentelemetry.io/collector/consumer"
 	"go.opentelemetry.io/collector/pdata/pcommon"
@@ -100,7 +98,7 @@ func recordExternalHostDurationMetric(logger *zap.Logger, m pmetric.Metric, smNe
 	newMetric := pmetric.NewMetric()
 	newMetric.SetName("apm.service.external.host.duration")
 	newMetric.SetDescription("Duration of external calls")
-	conversionFactor := setUnitAndComputeConversionFactor(newMetric, m.Unit())
+	newMetric.SetUnit(m.Unit())
 
 	switch metricType := m.Type(); metricType {
 	case pmetric.MetricTypeHistogram:
@@ -110,7 +108,6 @@ func recordExternalHostDurationMetric(logger *zap.Logger, m pmetric.Metric, smNe
 			if serverAddress, hasServerAddress := GetServerAddress(dp.Attributes()); hasServerAddress {
 				newDp := newMetric.Histogram().DataPoints().AppendEmpty()
 				dp.CopyTo(newDp)
-				convertUnitsHistogramDataPoint(newDp, conversionFactor)
 				newDp.Attributes().PutStr("server.address", serverAddress)
 				newDp.Attributes().PutStr("external.host", serverAddress)
 				newDp.Attributes().PutStr("metricTimesliceName", fmt.Sprintf("External/%s/all", serverAddress))
@@ -125,7 +122,6 @@ func recordExternalHostDurationMetric(logger *zap.Logger, m pmetric.Metric, smNe
 			if serverAddress, hasServerAddress := GetServerAddress(dp.Attributes()); hasServerAddress {
 				newDp := newMetric.ExponentialHistogram().DataPoints().AppendEmpty()
 				dp.CopyTo(newDp)
-				convertUnitsExponentialHistogramDataPoint(newDp, conversionFactor)
 				newDp.Attributes().PutStr("server.address", serverAddress)
 				newDp.Attributes().PutStr("external.host", serverAddress)
 				newDp.Attributes().PutStr("metricTimesliceName", fmt.Sprintf("External/%s/all", serverAddress))
@@ -145,7 +141,7 @@ func recordTransactionMetrics(logger *zap.Logger, m pmetric.Metric, metrics *Res
 	newMetric := pmetric.NewMetric()
 	newMetric.SetName("apm.service.transaction.duration")
 	newMetric.SetDescription("Duration of the transaction")
-	conversionFactor := setUnitAndComputeConversionFactor(newMetric, m.Unit())
+	newMetric.SetUnit(m.Unit())
 
 	switch metricType := m.Type(); metricType {
 	case pmetric.MetricTypeHistogram:
@@ -154,7 +150,6 @@ func recordTransactionMetrics(logger *zap.Logger, m pmetric.Metric, metrics *Res
 			dp := m.Histogram().DataPoints().At(i)
 			newDp := newMetric.Histogram().DataPoints().AppendEmpty()
 			dp.CopyTo(newDp)
-			convertUnitsHistogramDataPoint(newDp, conversionFactor)
 			name, txType := GetTransactionMetricNameFromAttributes(dp.Attributes())
 			newDp.Attributes().Clear()
 			newDp.Attributes().PutStr("transactionType", txType.AsString())
@@ -202,7 +197,6 @@ func recordTransactionMetrics(logger *zap.Logger, m pmetric.Metric, metrics *Res
 			dp := m.ExponentialHistogram().DataPoints().At(i)
 			newDp := newMetric.ExponentialHistogram().DataPoints().AppendEmpty()
 			dp.CopyTo(newDp)
-			convertUnitsExponentialHistogramDataPoint(newDp, conversionFactor)
 			name, txType := GetTransactionMetricNameFromAttributes(dp.Attributes())
 			newDp.Attributes().Clear()
 			newDp.Attributes().PutStr("transactionType", txType.AsString())
@@ -240,23 +234,6 @@ func recordTransactionMetrics(logger *zap.Logger, m pmetric.Metric, metrics *Res
 	}
 }
 
-func setUnitAndComputeConversionFactor(m pmetric.Metric, unit string) float64 {
-	// The unit conversion we're doing here in the collector is temporary.
-	// A proper NRQL convert function is currently in staging. When it becomes available,
-	// we will remove the unit conversion logic from the collector.
-	// For now, we're keeping it simple. We only support converting milliseconds to seconds.
-	// The http.*.duration metrics were previously reported in milliseconds.
-	// With the new stable conventions, they are reported in seconds. Therefore, this unit
-	// conversion is necessary for users using the old instrumentation or instrumentation
-	// that has not yet been updated to use the stable conventions.
-	if unit != "ms" {
-		m.SetUnit(unit)
-		return 1.0
-	}
-	m.SetUnit("s")
-	return .001
-}
-
 func createResourceAndScopeMetrics(logger *zap.Logger, rmNew pmetric.ResourceMetrics, attributesFilter *AttributeFilter, rm pmetric.ResourceMetrics, newMetrics pmetric.Metrics, metrics *ResourceMetrics, metricMap Metrics, smNew pmetric.ScopeMetrics) (pmetric.ResourceMetrics, pmetric.ScopeMetrics, *ResourceMetrics) {
 	if rmNew == (pmetric.ResourceMetrics{}) {
 		resourceAttributes, err := attributesFilter.FilterAttributes(rm.Resource().Attributes())
@@ -281,92 +258,6 @@ func createResourceAndScopeMetrics(logger *zap.Logger, rmNew pmetric.ResourceMet
 	}
 
 	return rmNew, smNew, metrics
-}
-
-func convertUnitsHistogramDataPoint(dp pmetric.HistogramDataPoint, conversionFactor float64) {
-	if conversionFactor == 1 {
-		return
-	}
-
-	if dp.HasSum() {
-		dp.SetSum(dp.Sum() * conversionFactor)
-	}
-	if dp.HasMin() {
-		dp.SetMin(dp.Min() * conversionFactor)
-	}
-	if dp.HasMax() {
-		dp.SetMax(dp.Max() * conversionFactor)
-	}
-	for index, bound := range dp.ExplicitBounds().AsRaw() {
-		dp.ExplicitBounds().SetAt(index, bound*conversionFactor)
-	}
-}
-
-func convertUnitsExponentialHistogramDataPoint(dp pmetric.ExponentialHistogramDataPoint, conversionFactor float64) {
-	if conversionFactor == 1 {
-		return
-	}
-
-	if dp.HasSum() {
-		dp.SetSum(dp.Sum() * conversionFactor)
-	}
-	if dp.HasMin() {
-		dp.SetMin(dp.Min() * conversionFactor)
-	}
-	if dp.HasMax() {
-		dp.SetMax(dp.Max() * conversionFactor)
-	}
-
-	orgScale := int(dp.Scale())
-
-	// TODO: For completeness we should do dp.Negative() as well, though in practice, no instrumentation currently
-	// from OpenTelemetry should be recording negative values against a histogram.
-	numBuckets := dp.Positive().BucketCounts().Len()
-	orgOffset := int(dp.Positive().Offset())
-	orgLastIndex := orgOffset + numBuckets - 1
-
-	// Calculate the range of values represented by the histogram in the original unit of measure
-	orgBase := math.Pow(2, math.Pow(2, float64(-orgScale)))
-	orgMinBound := math.Pow(orgBase, float64(orgOffset))
-	orgMaxBound := math.Pow(orgBase, float64(orgLastIndex+1))
-
-	// Apply the unit conversion factor to determine the range of values given tne new unit of measure
-	newMinBound := orgMinBound * conversionFactor
-	newUpperBound := orgMaxBound * conversionFactor
-
-	// It's likely (maybe nearly always) the case that the new ideal scale will be the same as the original scale
-	// But checking anyway... also we need to compute the new offset.
-	newScale := 20
-	newOffset := 0
-	for {
-		// This conversion glosses over the fact that boundaries are lower bound exclusive
-		newOffset = mapToIndex(newScale, newMinBound)
-		lastIndex := mapToIndex(newScale, newUpperBound)
-		if lastIndex-newOffset <= numBuckets {
-			break
-		}
-		newScale--
-	}
-
-	newCounts := make([]uint64, numBuckets)
-	for i, count := range dp.Positive().BucketCounts().AsRaw() {
-		// This is a naive approach but should be good enough for this prototype.
-		// The original bucket boundaries will not perfectly align with the new bucket boundaries, so
-		// a more accurate approach would be to distribute the count proportionally across the appropriate
-		// buckets.
-		newCounts[i] = count
-	}
-
-	dp.SetScale(int32(newScale))
-	dp.Positive().SetOffset(int32(newOffset))
-	dp.Positive().BucketCounts().FromRaw(newCounts)
-}
-
-func mapToIndex(scale int, value float64) int {
-	// TODO: This works for all scales, but really we should use the optimized algorithm for scales <= 0
-	// https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/metrics/data-model.md#negative-scale-extract-and-shift-the-exponent
-	scaleFactor := math.Ldexp(math.Log2E, scale)
-	return int(math.Ceil(math.Log(value)*scaleFactor) - 1)
 }
 
 func generateApdexMetrics(apdex Apdex, zone string, resourceMetrics *ResourceMetrics, startTimestamp pcommon.Timestamp, timestamp pcommon.Timestamp, count int64, transactionName string) {
