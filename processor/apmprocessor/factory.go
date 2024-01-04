@@ -19,7 +19,6 @@ const (
 	Type             = "newrelicapm"
 	TracesStability  = component.StabilityLevelDevelopment
 	MetricsStability = component.StabilityLevelDevelopment
-	LogsStability    = component.StabilityLevelDevelopment
 )
 
 // NewFactory returns a new factory for the Attributes processor.
@@ -29,7 +28,6 @@ func NewFactory() processor.Factory {
 		createDefaultConfig,
 		processor.WithTraces(createTracesProcessor, TracesStability),
 		processor.WithMetrics(createMetricsProcessor, MetricsStability),
-		processor.WithLogs(createLogsProcessor, LogsStability),
 	)
 }
 
@@ -73,24 +71,5 @@ func createMetricsProcessor(
 		cfg,
 		nextConsumer,
 		metricsProcessor.processMetrics,
-		processorhelper.WithCapabilities(processorCapabilities))
-}
-
-func createLogsProcessor(
-	ctx context.Context,
-	set processor.CreateSettings,
-	cfg component.Config,
-	nextConsumer consumer.Logs,
-) (processor.Logs, error) {
-	oCfg := cfg.(*Config)
-
-	logProcessor := newLogProcessor(*oCfg, set.Logger)
-
-	return processorhelper.NewLogsProcessor(
-		ctx,
-		set,
-		cfg,
-		nextConsumer,
-		logProcessor.processLogs,
 		processorhelper.WithCapabilities(processorCapabilities))
 }

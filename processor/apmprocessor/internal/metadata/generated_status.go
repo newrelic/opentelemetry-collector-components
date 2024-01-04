@@ -8,7 +8,6 @@ import (
 
 const (
 	Type             = "newrelicapm"
-	LogsStability    = component.StabilityLevelDevelopment
 	MetricsStability = component.StabilityLevelDevelopment
 	TracesStability  = component.StabilityLevelDevelopment
 )

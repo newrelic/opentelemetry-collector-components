@@ -39,5 +39,5 @@ service:
       exporters: [otlp]
     logs:
       receivers: [otlp]
-      processors: [newrelicapm, batch]
+      processors: [batch]
       exporters: [otlp]
