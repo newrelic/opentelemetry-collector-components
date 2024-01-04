@@ -37,7 +37,3 @@ service:
     metrics/apm:
       receivers: [newrelicapm/metrics]
       exporters: [otlp]
-    logs:
-      receivers: [otlp, newrelicapm]
-      processors: [batch]
-      exporters: [otlp]

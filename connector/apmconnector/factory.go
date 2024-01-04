@@ -17,7 +17,6 @@ import (
 const (
 	Type                      = "newrelicapm"
 	TracesToMetricsStability  = component.StabilityLevelDevelopment
-	TracesToLogsStability     = component.StabilityLevelDevelopment
 	MetricsToMetricsStability = component.StabilityLevelDevelopment
 )
 
@@ -27,7 +26,6 @@ func NewFactory() connector.Factory {
 		Type,
 		createDefaultConfig,
 		connector.WithTracesToMetrics(createTracesToMetrics, TracesToMetricsStability),
-		connector.WithTracesToLogs(createTracesToLogs, TracesToLogsStability),
 		connector.WithMetricsToMetrics(createMetricsToMetrics, MetricsToMetricsStability),
 	)
 }
@@ -50,22 +48,6 @@ func createTracesToMetrics(
 		config:          c,
 		metricsConsumer: nextConsumer,
 		logger:          set.Logger,
-	}, nil
-}
-
-// createTracesToLogs creates a traces to logs connector based on provided config.
-func createTracesToLogs(
-	_ context.Context,
-	set connector.CreateSettings,
-	cfg component.Config,
-	nextConsumer consumer.Logs,
-) (connector.Traces, error) {
-	c := cfg.(*Config)
-
-	return &ApmLogConnector{
-		config:       c,
-		logsConsumer: nextConsumer,
-		logger:       set.Logger,
 	}, nil
 }
 
