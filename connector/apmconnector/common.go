@@ -20,7 +20,7 @@ func ShouldProcess(logger *zap.Logger, rs pcommon.Resource) bool {
 }
 
 func ContainsErrorHTTPStatusCode(attributes pcommon.Map) bool {
-	statusCodeValue, statusCodeKey := GetFirst(attributes, []string{"http.request.status_code", "http.status_code"})
+	statusCodeValue, statusCodeKey := GetFirst(attributes, []string{"http.response.status_code", "http.status_code"})
 	if statusCodeKey != "" && statusCodeValue.Type() == pcommon.ValueTypeInt {
 		return statusCodeValue.Int() >= 500
 	}
