@@ -38,6 +38,6 @@ service:
       receivers: [newrelicapm/metrics]
       exporters: [otlp]
     logs:
-      receivers: [otlp, newrelicapm]
+      receivers: [otlp]
       processors: [batch]
       exporters: [otlp]

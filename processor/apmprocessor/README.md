@@ -1,30 +1,7 @@
-# APM Processor
+# New Relic APM Processor
 
-This processor inspects traces and enhances them with attributes that wil
-light up the New Relic APM UI.
+The New Relic APM Processor is a component that is part of an effort to
+prototype driving the New Relic APM UI sourced from OpenTelemetry data.
 
-It is best used together with the [apm connector](../../connector/apmconnector).
-
-It can be used on its own as such:
-
-```yaml
-receivers:
-  otlp:
-    protocols:
-      grpc:
-
-processors:
-  newrelicapm:
-  batch:
-
-exporters:
-  otlp:
-    endpoint: <endpoint>
-
-service:
-  pipelines:
-    traces:
-      receivers: [otlp]
-      processors: [newrelicapm, batch]
-      exporters: [otlp]
-```
+It is in active development and is not meant for stand-alone use. Please refer
+to this [example](../../examples/newrelicapm/README.md) for more information.
