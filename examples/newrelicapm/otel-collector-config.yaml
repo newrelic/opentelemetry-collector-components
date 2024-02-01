@@ -15,7 +15,7 @@ processors:
 exporters:
   logging:
     verbosity: normal
-  otlp:
+  otlphttp:
     endpoint: $NEW_RELIC_OTLP_ENDPOINT
     headers:
       api-key: $NEW_RELIC_API_KEY
@@ -29,15 +29,15 @@ service:
     traces:
       receivers: [otlp]
       processors: [newrelicapm, batch]
-      exporters: [newrelicapm, otlp]
+      exporters: [newrelicapm, otlphttp]
     metrics:
       receivers: [otlp, newrelicapm]
       processors: [newrelicapm, batch]
-      exporters: [otlp, newrelicapm/metrics]
+      exporters: [otlphttp, newrelicapm/metrics]
     metrics/apm:
       receivers: [newrelicapm/metrics]
-      exporters: [otlp]
+      exporters: [otlphttp]
     logs:
-      receivers: [otlp, newrelicapm]
+      receivers: [otlp]
       processors: [batch]
-      exporters: [otlp]
+      exporters: [otlphttp]
