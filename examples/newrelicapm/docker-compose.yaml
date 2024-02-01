@@ -18,12 +18,12 @@ services:
       dockerfile: DockerPetclinic
     environment:
       OTEL_EXPORTER_OTLP_COMPRESSION: gzip
-      OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4317
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4318
       # OTEL_EXPORTER_OTLP_METRICS_DEFAULT_HISTOGRAM_AGGREGATION: base2_exponential_bucket_histogram
       OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE: delta
+      OTEL_EXPORTER_OTLP_PROTOCOL: http/protobuf
       OTEL_LOGS_EXPORTER: otlp
       OTEL_METRIC_EXPORT_INTERVAL: 5000
-      # OTEL_SEMCONV_STABILITY_OPT_IN: http
       OTEL_SERVICE_NAME: "OpenTelemetry-NewRelic-APM-Demo"
       OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT: 4095
       OTEL_TRACES_SAMPLER: "parentbased_traceidratio"
