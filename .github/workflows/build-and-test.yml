@@ -13,7 +13,7 @@ jobs:
     if: ${{ github.actor != 'dependabot[bot]' }}
     steps:
       - name: Checkout Repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Setup Go
         uses: actions/setup-go@v3
         with:
@@ -37,7 +37,7 @@ jobs:
     needs: [setup-environment]
     steps:
       - name: Checkout Repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Check Code Owner Existence
         run: ./.github/workflows/scripts/check-codeowners.sh
   lint-matrix:
@@ -55,7 +55,7 @@ jobs:
     needs: [setup-environment]
     steps:
       - name: Checkout Repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Setup Go
         uses: actions/setup-go@v3
         with:
@@ -102,7 +102,7 @@ jobs:
     needs: [setup-environment]
     steps:
       - name: Checkout Repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Setup Go
         uses: actions/setup-go@v3
         with:
@@ -159,7 +159,7 @@ jobs:
       needs: [setup-environment]
       steps:
         - name: Checkout Repo
-          uses: actions/checkout@v3
+          uses: actions/checkout@v4
         - name: Setup Go
           uses: actions/setup-go@v3
           with:
@@ -226,7 +226,7 @@ jobs:
             arch: arm64
     steps:
       - name: Checkout Repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Setup Go
         uses: actions/setup-go@v3
         with:
