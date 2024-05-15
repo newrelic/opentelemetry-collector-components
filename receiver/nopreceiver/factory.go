@@ -7,6 +7,7 @@ import (
 	"context"
 	"time"
 
+	"github.com/newrelic/opentelemetry-collector-components/receiver/nopreceiver/internal/metadata"
 	"go.opentelemetry.io/collector/component"
 	"go.opentelemetry.io/collector/consumer"
 	"go.opentelemetry.io/collector/receiver"
@@ -14,19 +15,18 @@ import (
 )
 
 const (
-	typeStr   = "nop_stats"
 	stability = component.StabilityLevelDevelopment
 )
 
 func NewFactory() receiver.Factory {
 	return receiver.NewFactory(
-		typeStr,
+		metadata.Type,
 		createDefaultConfig,
 		receiver.WithMetrics(createMetricsReceiver, stability))
 }
 
 func createDefaultConfig() component.Config {
-	return &scraperhelper.ScraperControllerSettings{
+	return &scraperhelper.ControllerConfig{
 		CollectionInterval: 10 * time.Second,
 	}
 }
@@ -37,7 +37,7 @@ func createMetricsReceiver(
 	config component.Config,
 	consumer consumer.Metrics,
 ) (receiver.Metrics, error) {
-	scConf := config.(*scraperhelper.ScraperControllerSettings)
+	scConf := config.(*scraperhelper.ControllerConfig)
 	dsr, err := newReceiver(*scConf, params, consumer)
 	if err != nil {
 		return nil, err

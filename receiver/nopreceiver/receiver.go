@@ -12,7 +12,7 @@ import (
 	"go.opentelemetry.io/collector/receiver/scraperhelper"
 )
 
-func newReceiver(config scraperhelper.ScraperControllerSettings, set receiver.CreateSettings, nextConsumer consumer.Metrics) (receiver.Metrics, error) {
+func newReceiver(config scraperhelper.ControllerConfig, set receiver.CreateSettings, nextConsumer consumer.Metrics) (receiver.Metrics, error) {
 	scrp, err := scraperhelper.NewScraper("nopworld", scrape)
 	if err != nil {
 		return nil, err

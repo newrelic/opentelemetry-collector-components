@@ -24,7 +24,7 @@ func (m *metricHelloRequests) init() {
 	m.data.SetUnit("requests")
 	m.data.SetEmptySum()
 	m.data.Sum().SetIsMonotonic(true)
-	m.data.Sum().SetAggregationTemporality(pmetric.AggregationTemporalityCumulative)
+	m.data.Sum().SetAggregationTemporality(pmetric.AggregationTemporalityUnspecified)
 	m.data.Sum().DataPoints().EnsureCapacity(m.capacity)
 }
 
@@ -67,10 +67,11 @@ func newMetricHelloRequests(cfg MetricConfig) metricHelloRequests {
 // MetricsBuilder provides an interface for scrapers to report metrics while taking care of all the transformations
 // required to produce metric representation defined in metadata and user config.
 type MetricsBuilder struct {
-	startTime           pcommon.Timestamp   // start time that will be applied to all recorded data points.
-	metricsCapacity     int                 // maximum observed number of metrics per resource.
-	metricsBuffer       pmetric.Metrics     // accumulates metrics data before emitting.
-	buildInfo           component.BuildInfo // contains version information
+	config              MetricsBuilderConfig // config of the metrics builder.
+	startTime           pcommon.Timestamp    // start time that will be applied to all recorded data points.
+	metricsCapacity     int                  // maximum observed number of metrics per resource.
+	metricsBuffer       pmetric.Metrics      // accumulates metrics data before emitting.
+	buildInfo           component.BuildInfo  // contains version information.
 	metricHelloRequests metricHelloRequests
 }
 
@@ -86,11 +87,13 @@ func WithStartTime(startTime pcommon.Timestamp) metricBuilderOption {
 
 func NewMetricsBuilder(mbc MetricsBuilderConfig, settings receiver.CreateSettings, options ...metricBuilderOption) *MetricsBuilder {
 	mb := &MetricsBuilder{
+		config:              mbc,
 		startTime:           pcommon.NewTimestampFromTime(time.Now()),
 		metricsBuffer:       pmetric.NewMetrics(),
 		buildInfo:           settings.BuildInfo,
 		metricHelloRequests: newMetricHelloRequests(mbc.Metrics.HelloRequests),
 	}
+
 	for _, op := range options {
 		op(mb)
 	}
@@ -143,7 +146,7 @@ func WithStartTimeOverride(start pcommon.Timestamp) ResourceMetricsOption {
 func (mb *MetricsBuilder) EmitForResource(rmo ...ResourceMetricsOption) {
 	rm := pmetric.NewResourceMetrics()
 	ils := rm.ScopeMetrics().AppendEmpty()
-	ils.Scope().SetName("otelcol/nopreceiver")
+	ils.Scope().SetName("github.com/newrelic/opentelemetry-collector-components/receiver/nopreceiver")
 	ils.Scope().SetVersion(mb.buildInfo.Version)
 	ils.Metrics().EnsureCapacity(mb.metricsCapacity)
 	mb.metricHelloRequests.emit(ils.Metrics())
@@ -151,6 +154,7 @@ func (mb *MetricsBuilder) EmitForResource(rmo ...ResourceMetricsOption) {
 	for _, op := range rmo {
 		op(rm)
 	}
+
 	if ils.Metrics().Len() > 0 {
 		mb.updateCapacity(rm)
 		rm.MoveTo(mb.metricsBuffer.ResourceMetrics().AppendEmpty())

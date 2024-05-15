@@ -18,7 +18,7 @@ Total number of hello requests since it started
 
 | Unit | Metric Type | Value Type | Aggregation Temporality | Monotonic |
 | ---- | ----------- | ---------- | ----------------------- | --------- |
-| requests | Sum | Int | Cumulative | true |
+| requests | Sum | Int | Unspecified | true |
 
 #### Attributes
 

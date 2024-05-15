@@ -20,7 +20,7 @@ import (
 func TestScrape(t *testing.T) {
 	consumer := make(mockConsumer)
 
-	config := scraperhelper.ScraperControllerSettings{
+	config := scraperhelper.ControllerConfig{
 		CollectionInterval: 10 * time.Millisecond,
 	}
 

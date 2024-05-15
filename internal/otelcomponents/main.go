@@ -15,18 +15,13 @@ import (
 type ComponentsFunc func() (otelcol.Factories, error)
 
 func RunWithComponents(componentsFunc ComponentsFunc) {
-	factories, err := componentsFunc()
-	if err != nil {
-		log.Fatalf("failed to build components: %v", err)
-	}
-
 	info := component.BuildInfo{
 		Command:     "otelcomponents",
 		Description: "New Relic OpenTelemetry Collector Components",
 		Version:     version.Version,
 	}
 
-	if err = run(otelcol.CollectorSettings{BuildInfo: info, Factories: factories}); err != nil {
+	if err := run(otelcol.CollectorSettings{BuildInfo: info, Factories: componentsFunc}); err != nil {
 		log.Fatal(err)
 	}
 }
