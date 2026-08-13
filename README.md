@@ -1,3 +1,7 @@
+# ARCHIVED
+
+This repository has been archived as it is no longer in use. Custom component for [NRDOT](https://github.com/newrelic/nrdot-collector-releases) are developed in [nrdot-collector-component](https://github.com/newrelic/nrdot-collector-components).
+
 # OpenTelemetry Collector Components
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://github.com/newrelic/opentelemetry-collector-components/blob/master/LICENSE)
