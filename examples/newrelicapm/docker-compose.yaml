@@ -51,6 +51,16 @@ services:
       - mysql_data:/var/lib/mysql
       - mysql_config:/etc/mysql/conf.d
 
+  dotnetapp:
+    build: dotnetapp
+    environment:
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4317
+      OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE: delta
+      OTEL_SERVICE_NAME: "OpenTelemetry-NewRelic-APM-Demo-Dotnet"
+      PETCLINIC_URL: http://app:8080
+    ports:
+      - "8081:80"
+
 volumes:
   mysql_data:
   mysql_config:
